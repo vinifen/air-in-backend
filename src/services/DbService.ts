@@ -1,6 +1,6 @@
 import mysql, { RowDataPacket } from "mysql2";
 
-export class DbService {
+export default class DbService {
   private conn: mysql.Connection;
 
   constructor(dbHost: string, dbUser: string, dbPassword: string, dbName: string,) {

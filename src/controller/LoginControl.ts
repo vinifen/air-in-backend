@@ -1,4 +1,4 @@
-import { DbService } from "../services/DbService";
+import DbService from "../services/DbService";
 
 export default class LoginControl {
   private database: DbService;
