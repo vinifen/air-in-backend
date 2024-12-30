@@ -1,43 +1,25 @@
 import fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import DbService from './services/DbService';
-import checkDotEnv from './services/checkDotEnv';
-
-import LoginRouter from './routes/LoginRouter';
-import WeatherApiRouter from './routes/WeatherApiRouter';
-
-import dotenv from 'dotenv';
 import WeatherApiService from './services/WeatherApiService';
-
-dotenv.config();
-checkDotEnv();
-
-const DB_HOST: string = process.env.DB_HOST || "localhost";
-const DB_USER: string = process.env.DB_USER || "root";
-const DB_PASSWORD: string = process.env.DB_PASSWORD || "abc321";
-const DB_NAME: string = process.env.DB_NAME || "air_in_db";
-
-const WEATHER_API_KEY: string = process.env.WEATHER_API_KEY || "yourApiKey";
-
-const SERVER_HOSTNAME: string = process.env.SERVER_HOSTNAME ? process.env.SERVER_HOSTNAME : "localhost";
-const SERVER_PORT: number = process.env.SERVER_PORT ? parseInt(process.env.SERVER_PORT) : 1111;
-
-const CORS_ORIGIN = process.env.CORS_ORIGIN;
-const corsOptions = {
-  origin: CORS_ORIGIN,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-};
+import CityRouter from './routes/CityRouter';
+import UserRouter from './routes/UserRouter';
+import ConfigService from './services/ConfigService'; 
 
 const app = fastify();
+const config = new ConfigService();
+const database = new DbService(
+  config.DB_HOST,
+  config.DB_USER,
+  config.DB_PASSWORD,
+  config.DB_NAME
+);
+const weatherApiService = new WeatherApiService(config.WEATHER_API_KEY);
 
-const database = new DbService(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
-const weatherApiService = new WeatherApiService(WEATHER_API_KEY);
+app.register(fastifyCors, config.corsOptions);
+app.register(CityRouter, { db: database, weatherApiS: weatherApiService });
+app.register(UserRouter, { db: database });
 
-app.register(fastifyCors, corsOptions);
-
-app.register(WeatherApiRouter, weatherApiService)
-app.register(LoginRouter, database);
-
-app.listen({ port: SERVER_PORT, host: SERVER_HOSTNAME }).then(() => {
-  console.log(`HTTP server running on port: ${SERVER_PORT}`);
+app.listen({ port: config.SERVER_PORT, host: config.SERVER_HOSTNAME }).then(() => {
+  console.log(`HTTP server running on port: ${config.SERVER_PORT}`);
 });
