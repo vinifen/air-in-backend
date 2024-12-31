@@ -1,25 +1,38 @@
+import { RowDataPacket } from "mysql2";
+
 import DbService from "../services/DbService";
 
 export default class CitiesModel {
   constructor(private dbService: DbService) {}
 
-  async insertCity(name: string, id_users: number){
-    const query = "INSERT INTO cities(name, id_users) VALUES (?,?)";
-    await this.dbService.getQuery(query, [name, id_users]);
+  async insertCities(cities: string[], id_users: number) {
+    const query = "INSERT INTO cities(name, id_users) VALUES ?";
+    const data = cities.map(city => {
+      return [city, id_users];
+    });
+    
+    await this.dbService.getQuery(query, [data]);
+    return data;
   }
+  
 
-  async selectAllCitiesNames(){
+  async selectAllCitiesNames() {
     const query = "SELECT * FROM cities";
-
-    const response = await this.dbService.getQuery(query);
-    console.log(response + "teste all cities");
-    return response;
+  
+    const response: RowDataPacket[] = await this.dbService.getQuery(query);
+    const data: string[] = response.map((city: RowDataPacket) => {
+      return city.name as string;
+    });
+    return data;
   }
 
   async selectCityById(id: number){
     const query = "SELECT * FROM cities WHERE id = ?";
 
-    const response = await this.dbService.getQuery(query, [id]);
-    return response;
+    const response: RowDataPacket[] = await this.dbService.getQuery(query, [id]);
+    const data: string[] = response.map((city: RowDataPacket) => {
+      return city.name as string;
+    });
+    return data;
   }
 }

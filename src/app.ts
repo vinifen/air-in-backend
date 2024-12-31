@@ -7,6 +7,7 @@ import UserRouter from './routes/UserRouter';
 import ConfigService from './services/ConfigService'; 
 
 const app = fastify();
+
 const config = new ConfigService();
 const database = new DbService(
   config.DB_HOST,
@@ -15,6 +16,7 @@ const database = new DbService(
   config.DB_NAME
 );
 const weatherApiService = new WeatherApiService(config.WEATHER_API_KEY);
+
 
 app.register(fastifyCors, config.corsOptions);
 app.register(CityRouter, { db: database, weatherApiS: weatherApiService });
