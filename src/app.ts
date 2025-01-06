@@ -1,64 +1,34 @@
 import fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
-import { DbService } from './services/DbService';
-import LoginRouter from './routes/LoginRouter';
-import dotenv from 'dotenv';
-import fs from 'fs';
-
-dotenv.config();
-
-
-if (!fs.existsSync('.env')) {
-  console.error(`
-    ========================================================
-    [ALERT:] .env file is missing!
-    
-    For improved security and to prevent potential errors, 
-    please create a .env file in the root of the project with
-    the following variables (example values are provided):
-
-    SERVER_HOSTNAME="localhost"
-    SERVER_PORT="1111"
-    DB_HOST="localhost"
-    DB_USER="root"
-    DB_PASSWORD="abc321"
-    DB_NAME="air_in_db"
-    CORS_ORIGIN="http://localhost:3000"
-    
-    Without the .env file, the application will use default 
-    values, which may cause unexpected behavior and errors.
-    
-    ========================================================
-  `);
-
-    
-}
-
-const DB_HOST: string = process.env.DB_HOST || "localhost";
-const DB_USER = process.env.DB_USER || "root";
-const DB_PASSWORD = process.env.DB_PASSWORD || "abc321";
-const DB_NAME = process.env.DB_NAME || "air_in_db";
+import DbService from './services/DbService';
+import WeatherApiService from './services/WeatherApiService';
+import CityRouter from './routes/CityRouter';
+import UserRouter from './routes/UserRouter';
+import JWTService from './services/JWTService';
+import fastifyCookie from '@fastify/cookie';
+import JWTSessionRefreshService from './services/JWTSessionRefreshService';
+import AuthRouter from './routes/AuthRouter';
+import { configVariables } from './utils/configVariables';
 
 const app = fastify();
 
-const database = new DbService(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
+const database = new DbService(
+  configVariables.DB_HOST,
+  configVariables.DB_USER,
+  configVariables.DB_PASSWORD,
+  configVariables.DB_NAME
+);
+const weatherApiService = new WeatherApiService(configVariables.WEATHER_API_KEY);
+const sessionJWT = new JWTService(configVariables.JWT_SESSION_KEY);
+const refreshJWT = new JWTService(configVariables.JWT_REFRESH_KEY);
+const sessionRefreshJWT = new JWTSessionRefreshService(sessionJWT, refreshJWT, database);
 
-const hostname: string = process.env.SERVER_HOSTNAME ? process.env.SERVER_HOSTNAME : "localhost";
-const port: number = process.env.SERVER_PORT ? parseInt(process.env.SERVER_PORT) : 1111;
+app.register(fastifyCors, configVariables.corsOptions);
+app.register(fastifyCookie);
+app.register(CityRouter, { db: database, weatherApiS: weatherApiService });
+app.register(UserRouter, { db: database, jwtSessionRefreshS: sessionRefreshJWT });
+app.register(AuthRouter, { db: database, jwtSessionRefreshS: sessionRefreshJWT })
 
-const CORS_ORIGIN = process.env.CORS_ORIGIN ;
-const corsOptions = {
-  origin: CORS_ORIGIN,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-};
-
-console.log(corsOptions);
-app.register(fastifyCors, corsOptions);
-
-app.register(LoginRouter, database);
-
-
-
-app.listen({ port, host: hostname }).then(() => {
-  console.log(`HTTP server running on port: ${port}`);
+app.listen({ port: configVariables.SERVER_PORT, host: configVariables.SERVER_HOSTNAME }).then(() => {
+  console.log(`HTTP server running on port: ${configVariables.SERVER_PORT}`);
 });
