@@ -1,10 +1,39 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
+import JWTSessionRefreshService from '../services/JWTSessionRefreshService';
+import { sendResponse } from '../utils/sendReponse';
 
-export default async function verifyAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-  console.log("Teste EnsureAuth", request, reply);
+export const verifyAuth = (sessionRefreshJWT: JWTSessionRefreshService) => {
+  console.log("USERS TESTE");
+  return async function (request: FastifyRequest, reply: FastifyReply) {
+    console.log("USERS TESTE");
+    const sessionToken: string | undefined = request.cookies ? request.cookies.sessionToken : undefined;
+    const refreshToken: string | undefined = request.cookies ? request.cookies.refreshToken : undefined;
+    const refreshTokenExist: boolean = refreshToken ? true : false;
 
-  
-    return reply.redirect('/cities/weather');
-  
-
+    if(!sessionToken){
+      return sendResponse(
+        reply,
+        200, 
+        {
+          sessionTokenStatus: false, 
+          hasRefreshToken: refreshTokenExist, 
+          message: "Session token not found"
+        },
+        false
+      );
+    }
+    
+    if(sessionRefreshJWT.validitySessionToken(sessionToken) == false){
+      return sendResponse(
+        reply, 
+        200, 
+        {
+          sessionTokenStatus: false, 
+          hasRefreshToken: refreshTokenExist, 
+          message: "Invalid token"
+        }, 
+        false
+        );
+    }
+  }
 }

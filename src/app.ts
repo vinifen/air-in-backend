@@ -4,24 +4,31 @@ import DbService from './services/DbService';
 import WeatherApiService from './services/WeatherApiService';
 import CityRouter from './routes/CityRouter';
 import UserRouter from './routes/UserRouter';
-import ConfigService from './services/ConfigService'; 
+import JWTService from './services/JWTService';
+import fastifyCookie from '@fastify/cookie';
+import JWTSessionRefreshService from './services/JWTSessionRefreshService';
+import AuthRouter from './routes/AuthRouter';
+import { configVariables } from './utils/configVariables';
 
 const app = fastify();
 
-const config = new ConfigService();
 const database = new DbService(
-  config.DB_HOST,
-  config.DB_USER,
-  config.DB_PASSWORD,
-  config.DB_NAME
+  configVariables.DB_HOST,
+  configVariables.DB_USER,
+  configVariables.DB_PASSWORD,
+  configVariables.DB_NAME
 );
-const weatherApiService = new WeatherApiService(config.WEATHER_API_KEY);
+const weatherApiService = new WeatherApiService(configVariables.WEATHER_API_KEY);
+const sessionJWT = new JWTService(configVariables.JWT_SESSION_KEY);
+const refreshJWT = new JWTService(configVariables.JWT_REFRESH_KEY);
+const sessionRefreshJWT = new JWTSessionRefreshService(sessionJWT, refreshJWT, database);
 
-
-app.register(fastifyCors, config.corsOptions);
+app.register(fastifyCors, configVariables.corsOptions);
+app.register(fastifyCookie);
 app.register(CityRouter, { db: database, weatherApiS: weatherApiService });
-app.register(UserRouter, { db: database });
+app.register(UserRouter, { db: database, jwtSessionRefreshS: sessionRefreshJWT });
+app.register(AuthRouter, { db: database, jwtSessionRefreshS: sessionRefreshJWT })
 
-app.listen({ port: config.SERVER_PORT, host: config.SERVER_HOSTNAME }).then(() => {
-  console.log(`HTTP server running on port: ${config.SERVER_PORT}`);
+app.listen({ port: configVariables.SERVER_PORT, host: configVariables.SERVER_HOSTNAME }).then(() => {
+  console.log(`HTTP server running on port: ${configVariables.SERVER_PORT}`);
 });

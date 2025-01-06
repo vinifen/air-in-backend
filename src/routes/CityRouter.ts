@@ -4,16 +4,16 @@ import CityControl from "../controller/CityControl";
 import { sendResponse } from "../utils/sendReponse";
 import CitiesModel from "../model/CitiesModel";
 import DbService from "../services/DbService";
-import ICitiesResponse from "../interfaces/ICitiesResponse";
 
-export default function CityRouter(app: FastifyInstance, injections: {db: DbService, weatherApiS: WeatherApiService}) {
+
+export default function CityRouter(app: FastifyInstance, injections: {db: DbService, weatherApiS: WeatherApiService, }) {
   const citiesModel = new CitiesModel(injections.db);
   const cityControl = new CityControl(injections.weatherApiS, citiesModel);
 
   app.post("/cities", async (request, reply) => {
     const city: string[] = request.body as string[];
-    const {id_users}  = request.body as { id_users: number }
-    console.log(city);
+    const {id_users}  = request.body as { id_users: number };
+
     try {
       const data = await cityControl.postCity(city, id_users);
       sendResponse(reply, 200, data);
@@ -44,9 +44,9 @@ export default function CityRouter(app: FastifyInstance, injections: {db: DbServ
   });
 
   app.get("/cities/:id/weather", async (request, reply) => {
-    const { id } = request.params as { id: number }
+    const { id } = request.params as { id: number };
     const clientIP = request.ip;
-    console.log(clientIP);
+ 
     try {
       const data = await cityControl.getWeatherByCity(id);
       sendResponse(reply, 200, data);
@@ -59,7 +59,7 @@ export default function CityRouter(app: FastifyInstance, injections: {db: DbServ
   
   app.post("/cities/weather/unlogged", async (request, reply) => {
     const cities: string[] = request.body as string[];
-    
+
     try {
       const data  = await injections.weatherApiS.request(cities);
       
