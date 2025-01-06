@@ -2,12 +2,13 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export default class ConfigService {
+class ConfigVariablesClass {
 
   get corsOptions() {
     return {
-      origin: this.CORS_ORIGIN,
+      origin: process.env.CORS_ORIGIN,
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      credentials: true, 
     };
   }
   
@@ -28,7 +29,7 @@ export default class ConfigService {
   }
 
   get WEATHER_API_KEY(): string {
-    return process.env.WEATHER_API_KEY || 'yourApiKey';
+    return process.env.WEATHER_API_KEY || 'yourApiKey***';
   }
 
   get SERVER_HOSTNAME(): string {
@@ -39,7 +40,13 @@ export default class ConfigService {
     return process.env.SERVER_PORT ? parseInt(process.env.SERVER_PORT) : 1111;
   }
 
-  get CORS_ORIGIN(): string | undefined {
-    return process.env.CORS_ORIGIN;
+  get JWT_SESSION_KEY(): string {
+    return process.env.JWT_SESSION_KEY || 'jwtkeysession321';
+  }
+
+  get JWT_REFRESH_KEY(): string {
+    return process.env.JWT_SESSION_KEY || 'jwtkeyrefresh123';
   }
 }
+
+export const configVariables = new ConfigVariablesClass();

@@ -1,3 +1,3 @@
 export default interface IWeatherAPIResponse {
-  city: string; response: any; status: boolean 
+  city: string; content: any; status: boolean 
 }
