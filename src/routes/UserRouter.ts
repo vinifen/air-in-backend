@@ -50,7 +50,7 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
           3600 * 1000, 
         );
       }
-      return sendResponse(reply, 201, { message: `Successfully created user`});
+      return sendResponse(reply, 201, { message: `Successfully created user`, content: {username: data.username}});
 
     } catch (error: any) {
       console.error("[Error in POST /users:]", error);

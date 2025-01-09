@@ -3,37 +3,48 @@ import JWTSessionRefreshService from '../services/JWTSessionRefreshService';
 import { sendResponse } from '../utils/sendReponse';
 
 export const verifyAuth = (sessionRefreshJWT: JWTSessionRefreshService) => {
-  console.log("USERS TESTE");
   return async function (request: FastifyRequest, reply: FastifyReply) {
-    console.log("USERS TESTE");
     const sessionToken: string | undefined = request.cookies ? request.cookies.sessionToken : undefined;
     const refreshToken: string | undefined = request.cookies ? request.cookies.refreshToken : undefined;
     const refreshTokenExist: boolean = refreshToken ? true : false;
 
-    if(!sessionToken){
+    if (refreshToken && !sessionRefreshJWT.validityRefreshToken(refreshToken)) {
       return sendResponse(
         reply,
-        200, 
+        200,
         {
-          sessionTokenStatus: false, 
-          hasRefreshToken: refreshTokenExist, 
-          message: "Session token not found"
+          stStatus: false,
+          hasRt: false,
+          message: "Invalid token"
         },
         false
       );
     }
-    
-    if(sessionRefreshJWT.validitySessionToken(sessionToken) == false){
+
+    if (!sessionToken) {
       return sendResponse(
-        reply, 
+        reply,
         200, 
         {
-          sessionTokenStatus: false, 
-          hasRefreshToken: refreshTokenExist, 
+          stStatus: false, 
+          hasRt: refreshTokenExist, 
           message: "Invalid token"
-        }, 
+        },
         false
-        );
+      );
+    }
+
+    if (!sessionRefreshJWT.validitySessionToken(sessionToken)) {
+      return sendResponse(
+        reply,
+        200, 
+        {
+          stStatus: false, 
+          hasRt: refreshTokenExist, 
+          message: "Invalid token"
+        },
+        false
+      );
     }
   }
 }

@@ -45,7 +45,7 @@ export default class UserControl {
       const sessionToken: string = this.jwtSessionRefresh.generateSessionToken(paylod);
       const refreshToken: string = await this.jwtSessionRefresh.generateRefreshToken(paylod);
 
-      return {sessionToken: sessionToken, refreshToken: refreshToken};
+      return {sessionToken: sessionToken, refreshToken: refreshToken, username: username};
     } else {
       throw new Error('User not found');
     }
