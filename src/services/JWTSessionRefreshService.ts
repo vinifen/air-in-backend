@@ -47,13 +47,14 @@ export default class JWTSessionRefreshService{
 
   private async postHashRefreshToken(token: string){
     const payload: JwtPayload = this.getRefreshTokenPayload(token);
-    const userID: number = payload.id;
+    const userId: number = payload.userID;
     const tokenHash: string = await bcrypt.hash(token, saltRounds);
     const iat: number = payload.iat ?? 0; 
 
     if (iat === 0) {
       throw new Error('Invalid refresh token: iat is missing or invalid');
     }
-    await this.refreshTokenModel.insertRefreshToken(tokenHash, userID, iat);
+    console.log(userId, "USERIDD");
+    await this.refreshTokenModel.insertRefreshToken(tokenHash, userId, iat);
   }
 }

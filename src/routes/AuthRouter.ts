@@ -16,19 +16,18 @@ export default function AuthRouter(app: FastifyInstance, injections: { db: DbSer
     const {username, password} = request.body as {username: string, password: string};
     try{
       const data = await authControl.loginUser(username, password);
-      if (!data.statusLogin) {
-        return sendResponse(reply, 401, data);
+      if (data.statusLogin != 200) {
+        return sendResponse(reply, 401, {message: data.message});
       }
-      const { statusLogin, sessionToken, refreshToken, message } = data;
 
-      if (!sessionToken || !refreshToken) {
+      if (!data.sessionToken || !data.refreshToken) {
         return sendResponse(reply, 500, { message: "Failed to generate tokens" });
       }
       
-      sendCookie(reply, "sessionToken", sessionToken);
-      sendCookie(reply, "refreshToken", refreshToken);
+      sendCookie(reply, "sessionToken", data.sessionToken);
+      sendCookie(reply, "refreshToken", data.refreshToken);
       
-      return sendResponse(reply, 200, { message, statusLogin});
+      return sendResponse(reply, data.statusLogin, {content: { userID: data.userID, username: data.username}, message: data.message});
     } catch (error: any) {
       console.error("[Error in POST /auth/login:]", error);
       return sendResponse(reply, 500, { message: error.message || error });
