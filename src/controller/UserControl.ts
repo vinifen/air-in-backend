@@ -15,9 +15,14 @@ export default class UserControl {
 
   async getUser(token: string){
     const paylod = this.jwtSessionRefresh.getSessionTokenPayload(token);
-    const userId = paylod.id;
+    const userId = paylod.userID;
+    console.log(userId);
     const result = await this.modelUser.selectUserById(userId);
-    return result;
+    console.log(result);
+    return {
+      userID: result.userID, 
+      username: result.username
+    };
   }
 
   async postUser(username: string, password: string) {
@@ -38,14 +43,19 @@ export default class UserControl {
     const response = await this.modelUser.selectUserByUsername(username);
     
     if (response) {
-      const { id, username } = response; 
       console.log(username + "asdfasd");
-      const paylod: JwtPayload = { id, username };  
+      const paylod: JwtPayload = { userID: response.userID, username: response.username };  
       
       const sessionToken: string = this.jwtSessionRefresh.generateSessionToken(paylod);
       const refreshToken: string = await this.jwtSessionRefresh.generateRefreshToken(paylod);
 
-      return {sessionToken: sessionToken, refreshToken: refreshToken, username: username};
+      return {
+        sessionToken: sessionToken, 
+        refreshToken: refreshToken, 
+        username: response.username, 
+        userID: response.userID 
+      }
+
     } else {
       throw new Error('User not found');
     }

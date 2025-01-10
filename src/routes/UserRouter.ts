@@ -20,7 +20,7 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
    
     try {
       const data = await userControl.getUser(sessionToken);
-      return sendResponse(reply, 200, { content: {username: data[0].username}, sessionTokenStatus: true,});
+      return sendResponse(reply, 200, { content: {userID: data.userID, username: data.username}, sessionTokenStatus: true,});
     } catch (error: any) {
       console.error("[Error in GET /users:]", error);
       return sendResponse(reply, 500, { message: error.message || error });
@@ -50,7 +50,7 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
           3600 * 1000, 
         );
       }
-      return sendResponse(reply, 201, { message: `Successfully created user`, content: {username: data.username}});
+      return sendResponse(reply, 201, { message: `Successfully created user`, content: {userID: data.userID, username: data.username}});
 
     } catch (error: any) {
       console.error("[Error in POST /users:]", error);

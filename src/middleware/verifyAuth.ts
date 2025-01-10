@@ -1,25 +1,13 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import JWTSessionRefreshService from '../services/JWTSessionRefreshService';
 import { sendResponse } from '../utils/sendReponse';
+import bcrypt from "bcrypt";
 
 export const verifyAuth = (sessionRefreshJWT: JWTSessionRefreshService) => {
   return async function (request: FastifyRequest, reply: FastifyReply) {
     const sessionToken: string | undefined = request.cookies ? request.cookies.sessionToken : undefined;
     const refreshToken: string | undefined = request.cookies ? request.cookies.refreshToken : undefined;
     const refreshTokenExist: boolean = refreshToken ? true : false;
-
-    if (refreshToken && !sessionRefreshJWT.validityRefreshToken(refreshToken)) {
-      return sendResponse(
-        reply,
-        200,
-        {
-          stStatus: false,
-          hasRt: false,
-          message: "Invalid token"
-        },
-        false
-      );
-    }
 
     if (!sessionToken) {
       return sendResponse(

@@ -11,11 +11,15 @@ export default class UsersModel {
     return response;
   }
 
-  async selectUserById(id: number){
+  async selectUserById(userID: number){
     const query = "SELECT * FROM users WHERE id = ?";
-    const value = [id];
+    const value = [userID];
     const response = await this.dbService.getQuery(query, value);
-    return response;
+    return {
+      userID: response[0].id,
+      username: response[0].username,
+      password: response[0].password
+    };
   }
 
   async selectUserByUsername(username: string) {
@@ -27,7 +31,7 @@ export default class UsersModel {
     }
 
     return {
-      id: response[0].id,
+      userID: response[0].id,
       username: response[0].username,
       password: response[0].password,
     };
