@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import JWTSessionRefreshService from '../services/JWTSessionRefreshService';
 import { sendResponse } from '../utils/sendReponse';
-import bcrypt from "bcrypt";
+
 
 export const verifyAuth = (sessionRefreshJWT: JWTSessionRefreshService) => {
   return async function (request: FastifyRequest, reply: FastifyReply) {

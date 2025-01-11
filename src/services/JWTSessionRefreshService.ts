@@ -27,14 +27,7 @@ export default class JWTSessionRefreshService{
     return this.jwtRefresh.verifyTokenValidity(token);
   }
   
-  generateTokens(data: JwtPayload) {
-    const sessionToken = this.generateSessionToken(data);
-    const refreshToken = this.generateRefreshToken(data);
-  
-    return { sessionToken, refreshToken };
-  }
-
-  generateSessionToken(data: JwtPayload){
+  async generateSessionToken(data: JwtPayload){
     const token: string = this.jwtSession.generateToken(data, "1h");
     return token;
   }
@@ -47,14 +40,10 @@ export default class JWTSessionRefreshService{
 
   private async postHashRefreshToken(token: string){
     const payload: JwtPayload = this.getRefreshTokenPayload(token);
-    const userId: number = payload.userID;
-    const tokenHash: string = await bcrypt.hash(token, saltRounds);
-    const iat: number = payload.iat ?? 0; 
 
-    if (iat === 0) {
-      throw new Error('Invalid refresh token: iat is missing or invalid');
-    }
-    console.log(userId, "USERIDD");
-    await this.refreshTokenModel.insertRefreshToken(tokenHash, userId, iat);
+    const tokenHash: string = await bcrypt.hash(token, saltRounds);
+    console.log(tokenHash, payload, "NEW TOKEN HASH E PAYLOAD EM POST REFRESH TOKEN");
+    console.log(payload.userId, "USERIDD");
+    await this.refreshTokenModel.insertRefreshToken(tokenHash, payload.userID, payload.publicTokenID);
   }
 }

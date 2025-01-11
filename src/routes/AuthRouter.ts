@@ -6,6 +6,7 @@ import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 import { sendResponse } from "../utils/sendReponse";
 import { sendCookie } from "../utils/sendCookie";
 import RefreshTokenModel from "../model/RefreshTokenModel";
+import { removeCookie } from "../utils/removeCookie";
 
 export default function AuthRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService }){
   const refreshTokenModel = new RefreshTokenModel(injections.db);
@@ -44,15 +45,20 @@ export default function AuthRouter(app: FastifyInstance, injections: { db: DbSer
     try {
       const data = await authControl.regenerateTokens(refreshToken);
       
-      if(await data.newRefreshToken && data.newSessionToken){
+      if(data.newRefreshToken && data.newSessionToken){
         sendCookie(reply, "sessionToken", data.newSessionToken);
-        sendCookie(reply, "refreshToken", await data.newRefreshToken);
+        sendCookie(reply, "refreshToken", data.newRefreshToken);
+      }else{
+        removeCookie(reply, "sessionToken");
+        removeCookie(reply, "refreshToken");
       }
       console.log(data);
       return sendResponse(reply, data.statusCode, {message: data.message});
     } catch (error: any) {
       console.error("[Error in POST /auth/refresh-token:]", error);
-      return sendResponse(reply, 500, { message: error.message || error });
+      removeCookie(reply, "sessionToken");
+      removeCookie(reply, "refreshToken");
+      return sendResponse(reply, 500, { message: error.message});
     }
   })
 }

@@ -6,13 +6,13 @@ import UsersModel from "../model/UsersModel";
 import { verifyAuth } from "../middleware/verifyAuth";
 import { sendCookie } from "../utils/sendCookie";
 import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
+import { removeCookie } from "../utils/removeCookie";
 
 export default async function UserRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService}) {
   const usersModel = new UsersModel(injections.db);
   const userControl = new UserControl(usersModel, injections.jwtSessionRefreshS);
 
   app.get("/users", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
-   
     const sessionToken = request.cookies.sessionToken;
     if (!sessionToken) {
       return sendResponse(reply, 400, { message: "Session token is required" });
@@ -23,12 +23,13 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
       return sendResponse(reply, 200, { content: {userID: data.userID, username: data.username}, sessionTokenStatus: true,});
     } catch (error: any) {
       console.error("[Error in GET /users:]", error);
+      removeCookie(reply, "sessionToken");
+      removeCookie(reply, "refreshToken");
       return sendResponse(reply, 500, { message: error.message || error });
     }
   });
 
-  app.post("/users", async (request, reply) => {
-    
+  app.post("/users", async (request, reply) => { 
     const {username, password} = request.body as {username: string, password: string}
     try {
       const data = await userControl.postUser(username, password);
