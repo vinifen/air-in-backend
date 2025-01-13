@@ -36,52 +36,6 @@ export default class AuthControl {
     };
   }
 
-  // async regenerateTokens(refreshToken: string) {
-  //   const hashRT = await bcrypt.hash(refreshToken, saltRounds);
-  //   if (!this.jwtSessionRefresh.validityRefreshToken(refreshToken)) {
-  //     this.deleteOldRefreshToken(hashRT);
-  //     return {
-  //       statusCode: 400,
-  //       message: "Invalid refresh token",
-  //     };
-  //   }
-  
-  //   const payload: JwtPayload = this.jwtSessionRefresh.getRefreshTokenPayload(refreshToken);
-  
-  //   const hashRefreshToken = await this.refreshTokenModel.selectHashRefreshTokenByHashToken(refreshToken);
-  //   if (!hashRefreshToken || hashRefreshToken.status == false) {
-  //     this.deleteOldRefreshToken(hashRT);
-  //     return {
-  //       statusCode: 400,
-  //       message: "Invalid refresh token",
-  //     };
-  //   }
-  
-  //   const isRefreshTokenValid = await bcrypt.compare(refreshToken, hashRefreshToken.token);
-  //   if (!isRefreshTokenValid) {
-  //     this.deleteOldRefreshToken(hashRT);
-  //     return {
-  //       statusCode: 400,
-  //       message: "Invalid refresh token",
-  //     };
-  //   }
-
-  //   this.deleteOldRefreshToken(hashRefreshToken.token)
-  
-  //   const newPayload: JwtPayload = {
-  //     userID: payload.userID,
-  //     username: payload.username,
-  //   };
-  //   const newSessionToken = await this.jwtSessionRefresh.generateSessionToken(newPayload);
-  //   const newRefreshToken = await this.jwtSessionRefresh.generateRefreshToken(newPayload);
-  
-  //   return {
-  //     statusCode: 200,
-  //     newSessionToken,
-  //     newRefreshToken,
-  //     message: "Successfully tokens regenerated",
-  //   };
-  // }
   async regenerateTokens(refreshToken: string) {
     const payload: JwtPayload = this.jwtSessionRefresh.getRefreshTokenPayload(refreshToken);
     console.log(payload,  "REFRESH TOKEN PAYLOAD REGENERATE TOKENS");
@@ -121,9 +75,24 @@ export default class AuthControl {
 
   }
 
-  private async isRefreshTokenValid(rt: string){
-   
+  async logout(refreshToken: string): Promise<void>{
+    const paylod = this.verifyTokenPayload(refreshToken);
+    if(paylod && paylod.userID && paylod.publicTokenID){
+      await this.deleteOldHashRefreshToken(paylod.userID, paylod.publicTokenID);
+    }
+  }
 
+  verifyTokenPayload(refreshToken: string){
+    const payload: JwtPayload = this.jwtSessionRefresh.getRefreshTokenPayload(refreshToken);
+    if(!payload.publicTokenID || !payload.userID){
+      return null;
+    }
+    return payload;
+  }
+
+
+  //deletar isso
+  private async isRefreshTokenValid(rt: string){
     if (!this.jwtSessionRefresh.validityRefreshToken(rt)) {
       return {
         statusCode: 400,
@@ -148,7 +117,7 @@ export default class AuthControl {
     return {status: true, statusCode: 200}
   }
 
-  private async deleteOldHashRefreshToken(userID: string, publicTokenID: string){
+  async deleteOldHashRefreshToken(userID: string, publicTokenID: string){
     await this.refreshTokenModel.deleteRefreshToken(userID, publicTokenID);
   }
   

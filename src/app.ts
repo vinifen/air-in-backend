@@ -25,7 +25,7 @@ const sessionRefreshJWT = new JWTSessionRefreshService(sessionJWT, refreshJWT, d
 
 app.register(fastifyCors, configVariables.corsOptions);
 app.register(fastifyCookie);
-app.register(CityRouter, { db: database, weatherApiS: weatherApiService });
+app.register(CityRouter, { db: database, weatherApiS: weatherApiService, jwtSessionRefreshS: sessionRefreshJWT });
 app.register(UserRouter, { db: database, jwtSessionRefreshS: sessionRefreshJWT });
 app.register(AuthRouter, { db: database, jwtSessionRefreshS: sessionRefreshJWT })
 
