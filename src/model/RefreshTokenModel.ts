@@ -42,7 +42,7 @@ export default class RefreshTokenModel {
   async deleteRefreshToken(userID: string, publicTokenID: string){
     console.log(userID, publicTokenID, "INFORMACOES DELETE");
     if(!userID || !publicTokenID){
-      throw new Error('Failed to delete refresh token: Invalid parameters provided.')
+      return {status: false, message: "Failed to delete refresh token: Invalid parameters provided."}
     }
     const hashRT = await this.selectHashRefreshToken(userID, publicTokenID)
     console.log(hashRT, "HASH RT");
@@ -53,9 +53,9 @@ export default class RefreshTokenModel {
     const query = "DELETE FROM refresh_tokens WHERE id_users = ? AND public_id = ?";
     const response: RowDataPacket[] = await this.dbService.getQuery(query, [userID, publicTokenID]);
     if (response) {
-      return { status: true, message: "Refresh token delete successfully", response: response };
+      return { status: true, message: "Refresh token delete successfully.", response: response };
     } else {
-      throw new Error("Failed to delete refresh token");
+      return {status: false, message: "Failed to delete refresh token."}
     }
   }
 

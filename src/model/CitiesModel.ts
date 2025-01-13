@@ -5,10 +5,12 @@ import DbService from "../services/DbService";
 export default class CitiesModel {
   constructor(private dbService: DbService) {}
 
-  async insertCities(cities: string[], id_users: number) {
+  async insertCities(cities: string[], userID: number) {
+    console.log(cities, userID);
     const query = "INSERT INTO cities(name, id_users) VALUES ?";
     const data = cities.map(city => {
-      return [city, id_users];
+      console.log("DENTRO MAP", city)
+      return [city, userID];
     });
     
     await this.dbService.getQuery(query, [data]);
@@ -26,6 +28,7 @@ export default class CitiesModel {
     return data;
   }
 
+  //talvez nao use
   async selectCityById(id: number){
     const query = "SELECT * FROM cities WHERE id = ?";
 

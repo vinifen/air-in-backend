@@ -4,18 +4,21 @@ import CityControl from "../controller/CityControl";
 import { sendResponse } from "../utils/sendReponse";
 import CitiesModel from "../model/CitiesModel";
 import DbService from "../services/DbService";
+import { verifyAuth } from "../middleware/verifyAuth";
+import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 
 
-export default function CityRouter(app: FastifyInstance, injections: {db: DbService, weatherApiS: WeatherApiService, }) {
+export default function CityRouter(app: FastifyInstance, injections: {db: DbService, weatherApiS: WeatherApiService, jwtSessionRefreshS: JWTSessionRefreshService}) {
   const citiesModel = new CitiesModel(injections.db);
   const cityControl = new CityControl(injections.weatherApiS, citiesModel);
 
-  app.post("/cities", async (request, reply) => {
-    const city: string[] = request.body as string[];
-    const {id_users}  = request.body as { id_users: number };
+  app.post("/cities", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
+    const {cities} = request.body as {cities: string[]}
+    const {userID} = request.body as {userID: number}
 
     try {
-      const data = await cityControl.postCity(city, id_users);
+      await cityControl.postCity(cities, userID);
+      const data = await cityControl.getAllWeather();
       sendResponse(reply, 200, data);
     } catch (error: any) {
       console.error("[Error in post /cities:]", error);
@@ -23,7 +26,7 @@ export default function CityRouter(app: FastifyInstance, injections: {db: DbServ
     }
   });
 
-  app.get("/cities", async (_, reply) => {
+  app.get("/cities", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (_, reply) => {
     try {
       const data = await cityControl.getAllCities();
       sendResponse(reply, 200, data);
@@ -33,7 +36,7 @@ export default function CityRouter(app: FastifyInstance, injections: {db: DbServ
     }
   });
 
-  app.get("/cities/weather", async (_, reply) => {
+  app.get("/cities/weather", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (_, reply) => {
     try {
       const data = await cityControl.getAllWeather();
       sendResponse(reply, 200, data);
@@ -43,12 +46,12 @@ export default function CityRouter(app: FastifyInstance, injections: {db: DbServ
     }
   });
 
-  app.get("/cities/:id/weather", async (request, reply) => {
+  //talvez nao use
+  app.get("/cities/:id/weather", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const { id } = request.params as { id: number };
-    const clientIP = request.ip;
  
     try {
-      const data = await cityControl.getWeatherByCity(id);
+      const data = await cityControl.getWeatherByCityID(id);
       sendResponse(reply, 200, data);
     } catch (error: any) {
       console.error("[Error in post /cities/weather]", error);

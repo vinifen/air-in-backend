@@ -5,8 +5,8 @@ import WeatherApiService from "../services/WeatherApiService";
 export default class CityControl {
   constructor (private apiWeatherService: WeatherApiService, private modelCities: CitiesModel){}
 
-  async postCity(city: string[], id_users: number){
-    await this.modelCities.insertCities(city, id_users);
+  async postCity(city: string[], userID: number){
+    await this.modelCities.insertCities(city, userID);
     return await this.apiWeatherService.request(city);
   }
 
@@ -24,7 +24,8 @@ export default class CityControl {
     return result;
   }
 
-  async getWeatherByCity(id: number) {
+  //talvez eu nao use
+  async getWeatherByCityID(id: number) {
     const response: string[] = await this.modelCities.selectCityById(id);
    
     const result = await this.apiWeatherService.request(response);
