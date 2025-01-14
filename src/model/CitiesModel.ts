@@ -16,26 +16,52 @@ export default class CitiesModel {
     await this.dbService.getQuery(query, [data]);
     return data;
   }
-  
 
-  async selectAllCitiesNames() {
-    const query = "SELECT * FROM cities";
   
-    const response: RowDataPacket[] = await this.dbService.getQuery(query);
+  async selectAllUserCities(userID: number){
+    const query = "SELECT * FROM cities WHERE id_users = ?";
+
+    const response: RowDataPacket[] = await this.dbService.getQuery(query, [userID]);
     const data: string[] = response.map((city: RowDataPacket) => {
       return city.name as string;
     });
     return data;
   }
+
+  async selectUserCityByUserIdAndCityName(userID: number, city: string) {
+    const query = "SELECT * FROM cities WHERE id_users = ? AND name = ?";
+    const response: RowDataPacket[] = await this.dbService.getQuery(query, [userID, city]);
+  
+    if (response.length > 0) {
+      return {data: response[0], status: true};
+    } else {
+      return {status: false}; 
+    }
+  }
+
+   // async insertOneCity(city: string){
+  //   const query = "INSERT INTO cities(name, id_users) VALUES ?";
+  //   await this.dbService.getQuery(query, [city]);
+  // }
 
   //talvez nao use
-  async selectCityById(id: number){
-    const query = "SELECT * FROM cities WHERE id = ?";
+  // async selectCityById(id: number){
+  //   const query = "SELECT * FROM cities WHERE id = ?";
 
-    const response: RowDataPacket[] = await this.dbService.getQuery(query, [id]);
-    const data: string[] = response.map((city: RowDataPacket) => {
-      return city.name as string;
-    });
-    return data;
-  }
+  //   const response: RowDataPacket[] = await this.dbService.getQuery(query, [id]);
+  //   const data: string[] = response.map((city: RowDataPacket) => {
+  //     return city.name as string;
+  //   });
+  //   return data;
+  // }
+
+   // async selectAllCitiesNames() {
+  //   const query = "SELECT * FROM cities";
+  
+  //   const response: RowDataPacket[] = await this.dbService.getQuery(query);
+  //   const data: string[] = response.map((city: RowDataPacket) => {
+  //     return city.name as string;
+  //   });
+  //   return data;
+  // }
 }
