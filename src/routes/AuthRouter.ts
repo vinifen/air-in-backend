@@ -22,7 +22,7 @@ export default function AuthRouter(app: FastifyInstance, injections: { db: DbSer
       }
 
       if (!data.sessionToken || !data.refreshToken) {
-        return sendResponse(reply, 500, { message: "Failed to generate tokens" });
+        return sendResponse(reply, 500, { message: "Tokens not found" });
       }
       
       sendCookie(reply, "sessionToken", data.sessionToken);

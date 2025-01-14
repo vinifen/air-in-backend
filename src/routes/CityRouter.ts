@@ -6,70 +6,73 @@ import CitiesModel from "../model/CitiesModel";
 import DbService from "../services/DbService";
 import { verifyAuth } from "../middleware/verifyAuth";
 import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
+import IWeatherAPIResponse from "../interfaces/IWeatherAPIResponse";
 
 
 export default function CityRouter(app: FastifyInstance, injections: {db: DbService, weatherApiS: WeatherApiService, jwtSessionRefreshS: JWTSessionRefreshService}) {
   const citiesModel = new CitiesModel(injections.db);
-  const cityControl = new CityControl(injections.weatherApiS, citiesModel);
+  const cityControl = new CityControl(injections.weatherApiS, citiesModel, injections.jwtSessionRefreshS);
 
-  app.post("/cities", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
+  app.post("/cities-weather", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {cities} = request.body as {cities: string[]}
-    const {userID} = request.body as {userID: number}
-
+    const {sessionToken} = request.cookies as {sessionToken: string};
+    console.log(cities, "CITIESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
     try {
-      await cityControl.postCity(cities, userID);
-      const data = await cityControl.getAllWeather();
-      sendResponse(reply, 200, data);
+      const data = await cityControl.postCitiesWeather(cities, sessionToken);
+      return sendResponse(reply, 200, data);
     } catch (error: any) {
-      console.error("[Error in post /cities:]", error);
-      sendResponse(reply, 500, { message: error.message || error });
+      console.error("[Error in post /cities-weather:]", error);
+      return sendResponse(reply, 500, { message: error.message || error });
     }
   });
 
-  app.get("/cities", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (_, reply) => {
+  app.get("/cities-weather", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
+    const {sessionToken} = request.cookies as {sessionToken: string};
     try {
-      const data = await cityControl.getAllCities();
-      sendResponse(reply, 200, data);
+      const data: IWeatherAPIResponse[] = await cityControl.getAllUserCitiesWeather(sessionToken);
+      return sendResponse(reply, 200, data);
     } catch (error: any) {
-      console.error("[Error in post /cities/cities]", error);
-      sendResponse(reply, 500, { message: error.message || error });
+      console.error("[Error in get /cities-weather:]", error);
+      return sendResponse(reply, 500, { message: error.message || error });
     }
   });
 
-  app.get("/cities/weather", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (_, reply) => {
+  app.post("/cities-weather/public", async (request, reply) => {
+    const cities: string[] = request.body as string[];
+
     try {
-      const data = await cityControl.getAllWeather();
-      sendResponse(reply, 200, data);
+      const data  = await cityControl.fetchWeatherCities(cities);
+      
+      return sendResponse(reply, 200, data.data);
     } catch (error: any) {
-      console.error("[Error in post /cities/weather]", error);
-      sendResponse(reply, 500, { message: error.message || error });
+      console.error("[Error in post /cities-weather/public]", error);
+      return sendResponse(reply, 500, { message: error.message || error });
+    }
+  });
+
+  app.delete("/cities-weather", async (request, reply) => {
+    const {sessionToken} = request.cookies as {sessionToken: string};
+    try {
+      
+    } catch (error: any) {
+      console.error("[Error in delete /cities-weather]", error);
+      return sendResponse(reply, 500, { message: error.message || error });
     }
   });
 
   //talvez nao use
-  app.get("/cities/:id/weather", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
-    const { id } = request.params as { id: number };
+  // app.get("/cities-weather/:id/", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
+  //   const { id } = request.params as { id: number };
  
-    try {
-      const data = await cityControl.getWeatherByCityID(id);
-      sendResponse(reply, 200, data);
-    } catch (error: any) {
-      console.error("[Error in post /cities/weather]", error);
-      sendResponse(reply, 500, { message: error.message || error });
-    }
-  });
+  //   try {
+  //     const data = await cityControl.getWeatherByCityID(id);
+  //     return sendResponse(reply, 200, data);
+  //   } catch (error: any) {
+  //     console.error("[Error in post /cities-weather/:id/", error);
+  //     return sendResponse(reply, 500, { message: error.message || error });
+  //   }
+  // });
   
   
-  app.post("/cities/weather/unlogged", async (request, reply) => {
-    const cities: string[] = request.body as string[];
-
-    try {
-      const data  = await injections.weatherApiS.request(cities);
-      
-      sendResponse(reply, 200, data);
-    } catch (error: any) {
-      console.error("[Error in post /cities/weather/unlogged]", error);
-      sendResponse(reply, 500, { message: error.message || error });
-    }
-  });
+  
 }
