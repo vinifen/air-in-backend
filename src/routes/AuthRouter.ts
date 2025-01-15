@@ -47,8 +47,18 @@ export default function AuthRouter(app: FastifyInstance, injections: { db: DbSer
       const data = await authControl.regenerateTokens(refreshToken);
       
       if(data.newRefreshToken && data.newSessionToken){
-        sendCookie(reply, "sessionToken", data.newSessionToken);
-        sendCookie(reply, "refreshToken", data.newRefreshToken);
+        sendCookie(
+          reply, 
+          "sessionToken", 
+          data.newSessionToken,
+          7 * 24 * 60 * 60 * 1000
+        );
+        sendCookie(
+          reply, 
+          "refreshToken", 
+          data.newRefreshToken,
+          3600 * 1000
+        );
       }else{
         removeCookie(reply, "sessionToken");
         removeCookie(reply, "refreshToken");
