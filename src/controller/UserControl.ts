@@ -14,9 +14,13 @@ export default class UserControl {
   //   return result;
   // }
 
-  async getUser(token: string) {
+  async getUser(sessionToken: string) {
     try {
-      const payload = this.jwtSessionRefresh.getSessionTokenPayload(token);
+      const getPayload = this.jwtSessionRefresh.getSessionTokenPayload(sessionToken);
+      if(!getPayload.status){
+        return {statusCode: 400, message: getPayload.message}
+      }
+      const payload: JwtPayload = getPayload.data;
       console.log(payload, "PAYLOAD GETUSER")
       if (!payload || !payload.publicUserID) {
         throw new Error('Invalid token payload or publicUserID not found.');

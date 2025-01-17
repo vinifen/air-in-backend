@@ -13,10 +13,7 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
   const userControl = new UserControl(usersModel, injections.jwtSessionRefreshS);
 
   app.get("/users", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
-    const sessionToken = request.cookies.sessionToken;
-    if (!sessionToken) {
-      return sendResponse(reply, 400, { message: "Session token is required" });
-    }
+    const {sessionToken} = request.cookies as {sessionToken: string}
    
     try {
       const data = await userControl.getUser(sessionToken);
@@ -57,6 +54,16 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
     } catch (error: any) {
       console.error("[Error in POST /users:]", error);
       return sendResponse(reply, 500, { message: error.message || error });
+    }
+  });
+
+  app.delete("/users", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
+    const {sessionToken} = request.cookies as {sessionToken: string};
+   
+    try {
+      
+    } catch (error: any) {
+      
     }
   });
 }

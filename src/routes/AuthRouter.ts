@@ -28,7 +28,7 @@ export default function AuthRouter(app: FastifyInstance, injections: { db: DbSer
       sendCookie(reply, "sessionToken", data.sessionToken);
       sendCookie(reply, "refreshToken", data.refreshToken);
   
-      return sendResponse(reply, data.statusLogin, {content: { userID: data.userID, username: data.username}, message: data.message});
+      return sendResponse(reply, data.statusLogin, {content: { publicUserID: data.publicUserID, username: data.username}, message: data.message});
 
     } catch (error: any) {
       console.error("[Error in POST /auth/login:]", error);
