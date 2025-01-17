@@ -21,7 +21,7 @@ const database = new DbService(
 const weatherApiService = new WeatherApiService(configVariables.WEATHER_API_KEY);
 const sessionJWT = new JWTService(configVariables.JWT_SESSION_KEY);
 const refreshJWT = new JWTService(configVariables.JWT_REFRESH_KEY);
-const sessionRefreshJWT = new JWTSessionRefreshService(sessionJWT, refreshJWT, database);
+const sessionRefreshJWT = new JWTSessionRefreshService(sessionJWT, refreshJWT);
 
 app.register(fastifyCors, configVariables.corsOptions);
 app.register(fastifyCookie);

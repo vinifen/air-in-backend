@@ -12,10 +12,13 @@ export default class JWTService {
   }
 
   verifyTokenValidity(token: string){
+    console.log(token, "TOKEM EM INVALID TOKEN JWTService");
     try {
       jwt.verify(token, this.jwtKey);
+      console.log("TRUE VERIFYTOKEN")
       return true;
     } catch (error: any) {
+      console.log("FALSE VERIFYTOKEN")
       return false;
     }
   }

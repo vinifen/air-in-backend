@@ -14,16 +14,35 @@ export default class UserControl {
   //   return result;
   // }
 
-  async getUser(token: string){
-    const paylod = this.jwtSessionRefresh.getSessionTokenPayload(token);
-    const userId = paylod.userID;
-    console.log(userId);
-    const result = await this.modelUser.selectUserById(userId);
-    console.log(result);
-    return {
-      userID: result.userID, 
-      username: result.username
-    };
+  async getUser(token: string) {
+    try {
+      const payload = this.jwtSessionRefresh.getSessionTokenPayload(token);
+      console.log(payload, "PAYLOAD GETUSER")
+      if (!payload || !payload.publicUserID) {
+        throw new Error('Invalid token payload or publicUserID not found.');
+      }
+  
+      const publicUserID = payload.publicUserID;
+      const userId = await this.modelUser.selectIDbyPublicID(publicUserID);
+  
+      if (!userId) {
+        throw new Error(`User ID not found for publicUserID: ${publicUserID}`);
+      }
+  
+      const result = await this.modelUser.selectUserById(userId);
+  
+      if (!result) {
+        throw new Error(`User not found for ID: ${userId}`);
+      }
+  
+      return {
+        publicUserID: result.publicUserID,
+        username: result.username,
+      };
+    } catch (error) {
+      console.error('Error in getUser:', error);
+      throw new Error('Failed to retrieve user information.');
+    }
   }
 
   async postUser(username: string, password: string) {
@@ -34,7 +53,9 @@ export default class UserControl {
     }
 
     const hashPassword: string = await bcrypt.hash(password, saltRounds);
-    const insertResponse = await this.modelUser.insertUser(username, hashPassword);
+
+    const newPublicUserID = uuidv7();
+    const insertResponse = await this.modelUser.insertUser(username, hashPassword, newPublicUserID);
 
     if(insertResponse?.status == false){
       console.log(insertResponse);
@@ -46,8 +67,8 @@ export default class UserControl {
     if (response) {
       console.log(username + "asdfasd");
 
-      const publicTokenID = uuidv7();
-      const paylod: JwtPayload = { userID: response.userID, username: response.username, publicTokenID: publicTokenID};  
+      const newPublicTokenID = uuidv7();
+      const paylod: JwtPayload = { publicUserID: newPublicUserID, username: response.username, publicTokenID: newPublicTokenID};  
       
       const sessionToken: string = await this.jwtSessionRefresh.generateSessionToken(paylod);
       const refreshToken: string = await this.jwtSessionRefresh.generateRefreshToken(paylod);
@@ -56,11 +77,12 @@ export default class UserControl {
         sessionToken: sessionToken, 
         refreshToken: refreshToken, 
         username: response.username, 
-        userID: response.userID 
+        publicUserID: response.publicUserID 
       }
 
     } else {
       return { status: false, message: `User not found` };
     }
   }
+
 }
