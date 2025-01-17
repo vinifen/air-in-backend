@@ -23,11 +23,11 @@ export default class JWTService {
     }
   }
 
-  getTokenPayload(token: string): JwtPayload {
+  getTokenPayload(token: string): JwtPayload | null {
     try {      
       return jwt.verify(token, this.jwtKey) as JwtPayload;
     } catch (error: any) {
-      throw new Error('Invalid token');
+      return null;
     }
   }
 }

@@ -21,23 +21,28 @@ export default class AuthControl {
       return {statusLogin: 400, message: "Invalid Credentials"}
     }
 
-    const newTokens = await this.generateNewTokens(response.userID, response.username, response.publicUserID);
-    if(!newTokens || !newTokens.status){
-      return { status: false, statusLogin: 500}
+    const result = await this.handlerTokens(response.userID, response.username, response.publicUserID);
+    if(!result || !result.status){
+      return { status: false, statusLogin: result.statusCode}
     }
 
     return {
       statusLogin: 200,
       username: response.username,
-      userID: response.userID,
-      sessionToken: newTokens.sessionToken,   
-      refreshToken: newTokens.refreshToken,   
+      publicUserID: response.publicUserID,
+      sessionToken: result.sessionToken,   
+      refreshToken: result.refreshToken,   
       message: "Successfully logged in"
     };
   }
 
   async regenerateTokens(refreshToken: string) {
-    const payload: JwtPayload = this.jwtSessionRefresh.getRefreshTokenPayload(refreshToken);
+    const getPayload = this.jwtSessionRefresh.getRefreshTokenPayload(refreshToken);
+    if(!getPayload.status){
+      return {statusCode: 400, message: getPayload.message}
+    }
+    const payload: JwtPayload = getPayload.data;
+    
     const userId = await this.modelUser.selectIDbyPublicID(payload.publicUserID)
 
     console.log(payload,  "REFRESH TOKEN PAYLOAD REGENERATE TOKENS");
@@ -59,19 +64,37 @@ export default class AuthControl {
       }
     }
 
-    const newTokens = await this.generateNewTokens(userId, payload.username, payload.publicUserID);
-    if(!newTokens || !newTokens.status){
-      return { statusCode: 500}
+    const result = await this.handlerTokens(userId, payload.username, payload.publicUserID)
+    if(!result.status){
+      return {statusCode: result.statusCode, message: "Error regenerate tokens"}
     }
-    
-    this.deleteOldHashRefreshToken(userId, payload.publicTokenID);
+
     return {
       statusCode: 200,
-      newSessionToken: newTokens.sessionToken,
-      newRefreshToken: newTokens.refreshToken,
+      newSessionToken: result.sessionToken,
+      newRefreshToken: result.refreshToken,
       message: "Successfully tokens regenerated",
     };
+  }
 
+  private async handlerTokens(userId: number, username: string, publicUserID: string){
+    const newTokens = await this.jwtSessionRefresh.generateNewTokens(userId, username, publicUserID);
+    if(!newTokens || !newTokens.status || !newTokens.refreshToken || !newTokens.sessionToken){
+      return { 
+        status: false, 
+        statusCode: 500, 
+        message: newTokens.message
+      }
+    }
+    this.deleteOldHashRefreshToken(userId, newTokens.tokensIDs.publicRefreshTokenID);
+
+    const hashRefreshToken = await this.tokenToHashToken(newTokens.refreshToken);
+    await this.saveHashRefreshToken(hashRefreshToken, userId, newTokens.tokensIDs.publicRefreshTokenID);
+    return {
+      status: true, 
+      statusCode: 200,
+      sessionToken: newTokens.sessionToken, 
+      refreshToken: newTokens.refreshToken};
   }
 
 
@@ -93,22 +116,10 @@ export default class AuthControl {
     return payload;
   }
 
-  private async generateNewTokens(userID: number, username: string, publicUserID: string){
-    if(!username || !userID || !publicUserID){
-      return {status: false, message: "Error generating tokens: Invalid parameters"}
-    }
-    const newPublicTokenID = uuidv7();
-    const payload: JwtPayload = { publicUserID: publicUserID, username: username, publicTokenID: newPublicTokenID }
 
-    const sessionToken: string = await this.jwtSessionRefresh.generateSessionToken(payload);
-    const refreshToken: string = await this.jwtSessionRefresh.generateRefreshToken(payload);
-  
-    const tokenHash: string = await bcrypt.hash(refreshToken, saltRounds);
-    const saveHashRT = await this.saveHashRefreshToken(tokenHash, userID, newPublicTokenID);
-    if(!saveHashRT.status){
-      return {status: false, message: saveHashRT.message}
-    }
-    return {status: true, sessionToken: sessionToken, refreshToken: refreshToken}
+  private async tokenToHashToken(token: string){
+    const tokenHash: string = await bcrypt.hash(token, saltRounds);
+    return tokenHash;
   }
 
 
@@ -122,7 +133,7 @@ export default class AuthControl {
   } 
 
 
-  private async isHashRefreshTokenValid(userID: string, publicTokenID: string){
+  private async isHashRefreshTokenValid(userID: number, publicTokenID: string){
     console.log(userID, publicTokenID, 'user e public token id');
     const hashRefreshToken = await this.refreshTokenModel.selectHashRefreshToken(userID, publicTokenID);
     console.log(hashRefreshToken);
@@ -137,7 +148,7 @@ export default class AuthControl {
   }
 
 
-  private async deleteOldHashRefreshToken(userID: string, publicTokenID: string){
+  private async deleteOldHashRefreshToken(userID: number, publicTokenID: string){
     await this.refreshTokenModel.deleteRefreshToken(userID, publicTokenID);
   }
   

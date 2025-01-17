@@ -18,7 +18,7 @@ export default function CityRouter(app: FastifyInstance, injections: {db: DbServ
   app.post("/cities-weather", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {cities} = request.body as {cities: string[]}
     const {sessionToken} = request.cookies as {sessionToken: string};
-    console.log(cities, "CITIESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
+    
     try {
       const data = await cityControl.postCitiesWeather(cities, sessionToken);
       return sendResponse(reply, 200, data);
@@ -31,8 +31,11 @@ export default function CityRouter(app: FastifyInstance, injections: {db: DbServ
   app.get("/cities-weather", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {sessionToken} = request.cookies as {sessionToken: string};
     try {
-      const data: IWeatherAPIResponse[] = await cityControl.getAllUserCitiesWeather(sessionToken);
-      return sendResponse(reply, 200, data);
+      const data = await cityControl.getAllUserCitiesWeather(sessionToken);
+      if(!data.status){
+        return sendResponse(reply, data.statusCode, data.message);
+      }
+      return sendResponse(reply, data.statusCode, data.data);
     } catch (error: any) {
       console.error("[Error in get /cities-weather:]", error);
       return sendResponse(reply, 500, { message: error.message || error });

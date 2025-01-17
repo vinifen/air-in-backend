@@ -3,6 +3,7 @@ import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 import WeatherApiService from "../services/WeatherApiService";
 import IWeatherAPIResponse from "../interfaces/IWeatherAPIResponse";
 import UsersModel from "../model/UsersModel";
+import { JwtPayload } from "jsonwebtoken";
 
 export default class CityControl {
   constructor (
@@ -14,7 +15,11 @@ export default class CityControl {
   
 
   async postCitiesWeather(cities: string[], sessionToken: string){
-    const userID = await this.getUserIdBySessionToken(sessionToken);
+    const resultUserId = await this.getUserIdBySessionToken(sessionToken);
+    if(!resultUserId.status || !resultUserId.data){
+      return {status: false, statusCode: 500, message: resultUserId.message}
+    }
+    const userID: number = resultUserId.data;
 
     const citiesWeatherResult = await this.fetchWeatherCities(cities);
 
@@ -70,12 +75,15 @@ export default class CityControl {
 
 
   async getAllUserCitiesWeather(sessionToken: string){
-    const userID = await this.getUserIdBySessionToken(sessionToken);
-    const allCitiesNames: string[] = await this.modelCities.selectAllUserCities(userID);
+    const resultUserId = await this.getUserIdBySessionToken(sessionToken);
+    if(!resultUserId.status || !resultUserId.data){
+      return {status: false, statusCode: 500, message: resultUserId.message}
+    }
+    const allCitiesNames: string[] = await this.modelCities.selectAllUserCities(resultUserId.data);
     const citiesWeatherResult = await this.fetchWeatherCities(allCitiesNames);
 
     const citiesWeather: IWeatherAPIResponse[] = citiesWeatherResult.data;
-    return citiesWeather;
+    return {status: true, statusCode: 200, data: citiesWeather};
   }
 
 
@@ -86,9 +94,16 @@ export default class CityControl {
 
 
   private async getUserIdBySessionToken(sessionToken: string){
-    const payload = this.jwtSessionRefreshS.getSessionTokenPayload(sessionToken);
+    const getPayload = this.jwtSessionRefreshS.getSessionTokenPayload(sessionToken);
+    if(!getPayload.status){
+      return {status: false, message: getPayload.message}
+    }
+    const payload: JwtPayload = getPayload.data;
     const userId: number = await this.modelUser.selectIDbyPublicID(payload.publicUserID);
-    return userId;
+    if(!userId){
+      return {status: false, message: "Error converting public user id"}
+    }
+    return {status: true, data: userId};
   }
 
 

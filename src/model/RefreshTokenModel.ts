@@ -19,7 +19,7 @@ export default class RefreshTokenModel {
     }
   }
 
-  async selectHashRefreshToken(userID: string, publicTokenID: string){
+  async selectHashRefreshToken(userID: number, publicTokenID: string){
     console.log(userID, publicTokenID, "INFORMACAO INSERTREFRESHTOKEN SELECT");
     if(!userID || !publicTokenID){
       throw new Error('Failed to select refresh: Invalid parameters provided.')
@@ -39,7 +39,7 @@ export default class RefreshTokenModel {
     };
   }
 
-  async deleteRefreshToken(userID: string, publicTokenID: string){
+  async deleteRefreshToken(userID: number, publicTokenID: string){
     console.log(userID, publicTokenID, "INFORMACOES DELETE");
     if(!userID || !publicTokenID){
       return {status: false, message: "Failed to delete refresh token: Invalid parameters provided."}
