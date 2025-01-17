@@ -2,17 +2,19 @@ import CitiesModel from "../model/CitiesModel";
 import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 import WeatherApiService from "../services/WeatherApiService";
 import IWeatherAPIResponse from "../interfaces/IWeatherAPIResponse";
+import UsersModel from "../model/UsersModel";
 
 export default class CityControl {
   constructor (
     private apiWeatherService: WeatherApiService, 
     private modelCities: CitiesModel, 
-    private jwtSessionRefreshS: JWTSessionRefreshService
+    private jwtSessionRefreshS: JWTSessionRefreshService,
+    private modelUser: UsersModel
   ){}
   
 
   async postCitiesWeather(cities: string[], sessionToken: string){
-    const userID = this.getUserIdBySessionToken(sessionToken);
+    const userID = await this.getUserIdBySessionToken(sessionToken);
 
     const citiesWeatherResult = await this.fetchWeatherCities(cities);
 
@@ -68,7 +70,7 @@ export default class CityControl {
 
 
   async getAllUserCitiesWeather(sessionToken: string){
-    const userID = this.getUserIdBySessionToken(sessionToken);
+    const userID = await this.getUserIdBySessionToken(sessionToken);
     const allCitiesNames: string[] = await this.modelCities.selectAllUserCities(userID);
     const citiesWeatherResult = await this.fetchWeatherCities(allCitiesNames);
 
@@ -83,9 +85,10 @@ export default class CityControl {
   }
 
 
-  private getUserIdBySessionToken(sessionToken: string){
+  private async getUserIdBySessionToken(sessionToken: string){
     const payload = this.jwtSessionRefreshS.getSessionTokenPayload(sessionToken);
-    return payload.userID;
+    const userId: number = await this.modelUser.selectIDbyPublicID(payload.publicUserID);
+    return userId;
   }
 
 

@@ -1,3 +1,3 @@
 export default interface IUserContent{
- userID: number, username: string
+ userID: number, publicUserID: string, username: string
 }
