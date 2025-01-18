@@ -7,11 +7,12 @@ import { sendResponse } from "../utils/sendReponse";
 import { sendCookie } from "../utils/sendCookie";
 import RefreshTokenModel from "../model/RefreshTokenModel";
 import { removeCookie } from "../utils/removeCookie";
+import AuthService from "../services/AuthService";
 
-export default function AuthRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService }){
+export default function AuthRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, authService: AuthService }){
   const refreshTokenModel = new RefreshTokenModel(injections.db);
   const usersModel = new UsersModel(injections.db);
-  const authControl = new AuthControl(usersModel, refreshTokenModel, injections.jwtSessionRefreshS);
+  const authControl = new AuthControl(usersModel, refreshTokenModel, injections.jwtSessionRefreshS, injections.authService);
 
   app.post("/auth/login", async (request, reply) => {
     const {username, password} = request.body as {username: string, password: string};

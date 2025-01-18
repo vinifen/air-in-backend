@@ -8,10 +8,11 @@ import { sendCookie } from "../utils/sendCookie";
 import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 import { removeCookie } from "../utils/removeCookie";
 import AuthControl from "../controller/AuthControl";
+import AuthService from "../services/AuthService";
 
-export default async function UserRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, authControl: AuthControl}) {
+export default async function UserRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, authService: AuthService}) {
   const usersModel = new UsersModel(injections.db);
-  const userControl = new UserControl(usersModel, injections.jwtSessionRefreshS, injections.authControl);
+  const userControl = new UserControl(usersModel, injections.jwtSessionRefreshS, injections.authService);
 
   app.get("/users", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {sessionToken} = request.cookies as {sessionToken: string}

@@ -4,24 +4,30 @@ import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 import RefreshTokenModel from "../model/RefreshTokenModel";
 import bcrypt from "bcrypt";
 import { saltRounds } from "../utils/saltRounds";
+import AuthService from "../services/AuthService";
 
 
 export default class AuthControl {
-  constructor(private modelUser: UsersModel, private refreshTokenModel: RefreshTokenModel, private jwtSessionRefresh: JWTSessionRefreshService) {}
+  constructor(
+    private modelUser: UsersModel, 
+    private refreshTokenModel: RefreshTokenModel, 
+    private jwtSessionRefresh: JWTSessionRefreshService,
+    private authService: AuthService
+  ) {}
 
   async loginUser(usnm: string, pswd: string){
-
+    //
     const response = await this.modelUser.selectUserByUsername(usnm);
     if(!response){
       return {statusCode: 400, message: "Invalid Credentials"}
     }
   
-    const isPasswordValid = await this.validatePassword(pswd, response.userID);
+    const isPasswordValid = await this.authService.validatePassword(pswd, response.userID);
     if(!isPasswordValid.status){
       return { statusCode: isPasswordValid.status, message: isPasswordValid.message}
     }
 
-    const result = await this.handlerTokens(response.userID, response.username, response.publicUserID);
+    const result = await this.authService.handlerTokens(response.userID, response.username, response.publicUserID);
     if(!result || !result.status){
       return { status: false, statusCode: result.statusCode}
     }
@@ -36,20 +42,8 @@ export default class AuthControl {
     };
   }
 
-  async validatePassword(password: string, userdId: number){
-    const hashPassword = await this.modelUser.selectPasswordByUserID(userdId);
-    if(!hashPassword){
-      return {status: false, statusCode: 400, message: "Invalid Credentials"}
-    }
-    console.log(hashPassword, password, "AUTH PASSWORD")
-    const isPasswordValid = await bcrypt.compare(password, hashPassword);
-    if(!isPasswordValid){
-      return {status: false, statusCode: 400, message: "Invalid Credentials"}
-    }
-    return {status: true, statusCode: 200, message: "Password valid"}
-  }
-
   async regenerateTokens(refreshToken: string) {
+    //
     const getPayload = this.jwtSessionRefresh.getRefreshTokenPayload(refreshToken);
     if(!getPayload.status){
       return {statusCode: 400, message: getPayload.message}
@@ -68,7 +62,7 @@ export default class AuthControl {
       };
     }
 
-    const verifyHashRT = await this.isHashRefreshTokenValid(userId, payload.publicTokenID);
+    const verifyHashRT = await this.authService.isHashRefreshTokenValid(userId, payload.publicTokenID);
     console.log(verifyHashRT,  "VERIFY HASH TOKEN");
     if(verifyHashRT.status === false){
       return {
@@ -77,7 +71,7 @@ export default class AuthControl {
       }
     }
 
-    const result = await this.handlerTokens(userId, payload.username, payload.publicUserID)
+    const result = await this.authService.handlerTokens(userId, payload.username, payload.publicUserID)
     if(!result.status){
       return {statusCode: result.statusCode, message: "Error regenerate tokens"}
     }
@@ -90,79 +84,14 @@ export default class AuthControl {
     };
   }
 
-  async handlerTokens(userId: number, username: string, publicUserID: string){
-    const newTokens = await this.jwtSessionRefresh.generateNewTokens(username, publicUserID);
-    if(!newTokens || !newTokens.status || !newTokens.refreshToken || !newTokens.sessionToken){
-      return { 
-        status: false, 
-        statusCode: 500, 
-        message: newTokens.message
-      }
-    }
-    this.deleteOldHashRefreshToken(userId, newTokens.tokensIDs.publicRefreshTokenID);
-
-    const hashRefreshToken = await this.tokenToHashToken(newTokens.refreshToken);
-    await this.saveHashRefreshToken(hashRefreshToken, userId, newTokens.tokensIDs.publicRefreshTokenID);
-    return {
-      status: true, 
-      statusCode: 200,
-      sessionToken: newTokens.sessionToken, 
-      refreshToken: newTokens.refreshToken
-    }
-  }
-
   async logout(refreshToken: string): Promise<void>{
-    const payload = this.verifyTokenPayload(refreshToken);
+    //
+    const payload = this.authService.verifyTokenPayload(refreshToken);
    
     if(payload && payload.publicUserID && payload.publicTokenID){
       const userId = await this.modelUser.selectIDbyPublicID(payload.publicUserID);
-      await this.deleteOldHashRefreshToken(userId, payload.publicTokenID);
+      await this.authService.deleteOldHashRefreshToken(userId, payload.publicTokenID);
     }
   }
 
-
-  private verifyTokenPayload(refreshToken: string){
-    const payload: JwtPayload = this.jwtSessionRefresh.getRefreshTokenPayload(refreshToken);
-    if(!payload.publicTokenID || !payload.publicUserID){
-      return null;
-    }
-    return payload;
-  }
-
-
-  private async tokenToHashToken(token: string){
-    const tokenHash: string = await bcrypt.hash(token, saltRounds);
-    return tokenHash;
-  }
-
-
-  private async saveHashRefreshToken(hashRT: string, userID: number, publicTokenID: string){
-    const result = await this.refreshTokenModel.insertRefreshToken(hashRT, userID, publicTokenID);
-
-    if(!result.status){
-      return {status: result.status, message: result.message}
-    }
-    return {status: result.status}
-  } 
-
-
-  private async isHashRefreshTokenValid(userID: number, publicTokenID: string){
-    console.log(userID, publicTokenID, 'user e public token id');
-    const hashRefreshToken = await this.refreshTokenModel.selectHashRefreshToken(userID, publicTokenID);
-    console.log(hashRefreshToken);
-    if (!hashRefreshToken || hashRefreshToken.status === false || !hashRefreshToken.token ) {
-      return {
-        status: false,
-        statusCode: 400,
-        message: hashRefreshToken.message,
-      };
-    }
-    return {status: true, statusCode: 200}
-  }
-
-
-  private async deleteOldHashRefreshToken(userID: number, publicTokenID: string){
-    await this.refreshTokenModel.deleteRefreshToken(userID, publicTokenID);
-  }
-  
 }
