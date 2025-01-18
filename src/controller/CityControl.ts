@@ -14,31 +14,30 @@ export default class CityControl {
   ){}
   
 
-  async postCitiesWeather(cities: string[], sessionToken: string){
+  async postCitiesWeather(cities: string[], sessionToken: string) {
     const resultUserId = await this.getUserIdBySessionToken(sessionToken);
-    if(!resultUserId.status || !resultUserId.data){
-      return {status: false, statusCode: 500, message: resultUserId.message}
+    if (!resultUserId.status || !resultUserId.data) {
+      return { status: false, statusCode: 500, message: resultUserId.message };
     }
     const userID: number = resultUserId.data;
-
+  
     const citiesWeatherResult = await this.fetchWeatherCities(cities);
-
-    
-
-    if(citiesWeatherResult.allValid){ 
-      const allCitiesNames: string [] = citiesWeatherResult.data.map((city: any) => city.city);
-
+  
+    if (citiesWeatherResult.allValid) {
+      const allCitiesNames: string[] = citiesWeatherResult.data.map((city: any) => city.city);
+  
       const filteredCities = await this.removeExistingCities(userID, allCitiesNames);
-      if(filteredCities.status === false || !filteredCities.data){
-        return {status: false, message: filteredCities.message}
+      if (filteredCities.status === false || !filteredCities.data) {
+        return { status: false, statusCode: 400, message: filteredCities.message };
       }
-
-      await this.modelCities.insertCities( filteredCities.data, userID);
-    
-    
+  
+      await this.modelCities.insertCities(filteredCities.data, userID);
+  
       const citiesWeather: IWeatherAPIResponse[] = citiesWeatherResult.data;
-      return {data: citiesWeather, message: filteredCities.message};
+      return { status: true, statusCode: 200, message: "Cities processed successfully", data: citiesWeather };
     }
+  
+    return { status: false, statusCode: 500, message: "Error fetching weather data" };
   }
 
   private async removeExistingCities(userID: number, cities: string[]){
@@ -99,11 +98,11 @@ export default class CityControl {
       return {status: false, message: getPayload.message}
     }
     const payload: JwtPayload = getPayload.data;
-    const userId: number = await this.modelUser.selectIDbyPublicID(payload.publicUserID);
-    if(!userId){
-      return {status: false, message: "Error converting public user id"}
+    const resultUserData = await this.modelUser.selectUserDatabyPublicID(payload.publicUserID)
+    if(!resultUserData || !resultUserData.userID){
+      return {status: false};
     }
-    return {status: true, data: userId};
+    return {status: true, data: resultUserData.userID};
   }
 
 

@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import { saltRounds } from "../utils/saltRounds";
 import { JwtPayload } from "jsonwebtoken";
 import RefreshTokenModel from "../model/RefreshTokenModel";
+import { toHash } from "../utils/toHash";
 
 export default class AuthService{
   constructor(
@@ -24,7 +25,7 @@ export default class AuthService{
     }
     this.deleteOldHashRefreshToken(userId, newTokens.tokensIDs.publicRefreshTokenID);
 
-    const hashRefreshToken = await this.tokenToHashToken(newTokens.refreshToken);
+    const hashRefreshToken = await toHash(newTokens.refreshToken);
     await this.saveHashRefreshToken(hashRefreshToken, userId, newTokens.tokensIDs.publicRefreshTokenID);
     return {
       status: true, 
@@ -56,13 +57,6 @@ export default class AuthService{
     return payload;
   }
 
-
-  async tokenToHashToken(token: string){
-    const tokenHash: string = await bcrypt.hash(token, saltRounds);
-    return tokenHash;
-  }
-
-
   async saveHashRefreshToken(hashRT: string, userID: number, publicTokenID: string){
     const result = await this.refreshTokenModel.insertRefreshToken(hashRT, userID, publicTokenID);
 
@@ -90,5 +84,10 @@ export default class AuthService{
 
   async deleteOldHashRefreshToken(userID: number, publicTokenID: string){
     await this.refreshTokenModel.deleteRefreshToken(userID, publicTokenID);
+  }
+
+  async deleteAllUserRefreshTokens(userID: number){
+    const result = await this.refreshTokenModel.deleteAllRefreshTokensUser(userID);
+    return result;
   }
 }

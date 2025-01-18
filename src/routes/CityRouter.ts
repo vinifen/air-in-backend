@@ -21,7 +21,10 @@ export default function CityRouter(app: FastifyInstance, injections: {db: DbServ
     
     try {
       const data = await cityControl.postCitiesWeather(cities, sessionToken);
-      return sendResponse(reply, 200, data);
+      if(!data.status){
+        return sendResponse(reply, data.statusCode, data.message);
+      }
+      return sendResponse(reply, 200, data.data);
     } catch (error: any) {
       console.error("[Error in post /cities-weather:]", error);
       return sendResponse(reply, 500, { message: error.message || error });

@@ -39,29 +39,24 @@ export default class CitiesModel {
     }
   }
 
-   // async insertOneCity(city: string){
-  //   const query = "INSERT INTO cities(name, id_users) VALUES ?";
-  //   await this.dbService.getQuery(query, [city]);
-  // }
+  async deleteAllUserCities(userID: number, validator: boolean) {
+    try {
+      if(!validator){
+        return {status: false, message: "Delete all user cities data not authorized"}
+      }
+      const query = "DELETE FROM cities WHERE id_users = ?";
+      
+      const response = await this.dbService.getQuery(query, [userID]);
 
-  //talvez nao use
-  // async selectCityById(id: number){
-  //   const query = "SELECT * FROM cities WHERE id = ?";
-
-  //   const response: RowDataPacket[] = await this.dbService.getQuery(query, [id]);
-  //   const data: string[] = response.map((city: RowDataPacket) => {
-  //     return city.name as string;
-  //   });
-  //   return data;
-  // }
-
-   // async selectAllCitiesNames() {
-  //   const query = "SELECT * FROM cities";
+      if (response.length === 0) {
+        return { status: true, message: "No cities found for this user to delete." };
+      }
   
-  //   const response: RowDataPacket[] = await this.dbService.getQuery(query);
-  //   const data: string[] = response.map((city: RowDataPacket) => {
-  //     return city.name as string;
-  //   });
-  //   return data;
-  // }
+      return { status: true, message: "All cities deleted successfully." };
+    } catch (error) {
+      console.error("Error in deleteAllUserCities:", error);
+      return { status: false, message: "An error occurred while deleting cities." };
+    }
+  }
+
 }

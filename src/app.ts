@@ -13,6 +13,8 @@ import UsersModel from './model/UsersModel';
 import RefreshTokenModel from './model/RefreshTokenModel';
 import AuthControl from './controller/AuthControl';
 import AuthService from './services/AuthService';
+import CityService from './services/CityService';
+import CitiesModel from './model/CitiesModel';
 
 const app = fastify();
 
@@ -32,13 +34,14 @@ const weatherApiService = new WeatherApiService(configVariables.WEATHER_API_KEY)
 
 const usersModel = new UsersModel(databaseService);
 const refreshTokenModel = new RefreshTokenModel(databaseService);
-
+const citiesModel = new CitiesModel(databaseService)
 const authService = new AuthService(usersModel, sessionRefreshJWTService, refreshTokenModel);
+const cityService = new CityService(citiesModel)
 
 app.register(fastifyCors, configVariables.corsOptions);
 app.register(fastifyCookie);
 app.register(CityRouter, { db: databaseService, weatherApiS: weatherApiService, jwtSessionRefreshS: sessionRefreshJWTService });
-app.register(UserRouter, { db: databaseService, jwtSessionRefreshS: sessionRefreshJWTService, authService });
+app.register(UserRouter, { db: databaseService, jwtSessionRefreshS: sessionRefreshJWTService, authService, cityService });
 app.register(AuthRouter, { db: databaseService, jwtSessionRefreshS: sessionRefreshJWTService, authService })
 
 app.listen({ port: configVariables.SERVER_PORT, host: configVariables.SERVER_HOSTNAME }).then(() => {

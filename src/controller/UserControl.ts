@@ -6,113 +6,119 @@ import { saltRounds } from "../utils/saltRounds";
 import { uuidv7 } from "uuidv7";
 import AuthControl from "./AuthControl";
 import AuthService from "../services/AuthService";
+import UserService from "../services/UserService";
+import CityControl from "./CityControl";
+import CityService from "../services/CityService";
 
 export default class UserControl {
 
-  constructor(private modelUser: UsersModel, private jwtSessionRefresh: JWTSessionRefreshService, private authService: AuthService) {}
+  constructor(
+    private modelUser: UsersModel, 
+    private jwtSessionRefreshService: JWTSessionRefreshService, 
+    private authService: AuthService,
+    private userService: UserService,
+    private cityService: CityService
+  ) {}
 
-  // async getAllUsers() {
-  //   const result = await this.modelUser.selectAllUsers();
-  //   return result;
-  // }
 
   async getUser(sessionToken: string) {
-    try {
-      const getPayload = this.jwtSessionRefresh.getSessionTokenPayload(sessionToken);
-      if(!getPayload.status){
-        return {statusCode: 400, message: getPayload.message}
-      }
-      const payload: JwtPayload = getPayload.data;
-      console.log(payload, "PAYLOAD GETUSER")
-      if (!payload || !payload.publicUserID) {
-        throw new Error('Invalid token payload or publicUserID not found.');
-      }
-  
-      const publicUserID = payload.publicUserID;
-      const userId = await this.modelUser.selectIDbyPublicID(publicUserID);
-  
-      if (!userId) {
-        throw new Error(`User ID not found for publicUserID: ${publicUserID}`);
-      }
-  
-      const result = await this.modelUser.selectUserById(userId);
-  
-      if (!result) {
-        throw new Error(`User not found for ID: ${userId}`);
-      }
-  
-      return {
-        publicUserID: result.publicUserID,
-        username: result.username,
-      };
-    } catch (error) {
-      console.error('Error in getUser:', error);
-      throw new Error('Failed to retrieve user information.');
+    const resultPayload = this.jwtSessionRefreshService.getSessionTokenPayload(sessionToken);
+    if(!resultPayload.status || !resultPayload.data){
+      return {status: false, message: resultPayload.message}
     }
+    const payload: JwtPayload = resultPayload.data;
+    console.log(payload, "PAYLOAD GETUSER")
+
+    const publicUserIDValidity = await this.userService.verifyPublicUserIdData(payload.publicUserID);
+    if(!publicUserIDValidity.status){
+      return {status: false, message: "User not found"}
+    }
+    
+    return {
+      status: true,
+      publicUserID: publicUserIDValidity.publicUserID,
+      username: publicUserIDValidity.username,
+    };
   }
+  
 
   async postUser(username: string, password: string) {
-    const existingUser = await this.modelUser.selectUserByUsername(username);
-  
-    if (existingUser) {
-      return { status: false, message: `Username ${username} is already registered.` };
+    const usernameValidity = await this.userService.verifyUsernameValidity(username);
+    if(!usernameValidity){
+      return {status: false, message: `Username ${username} is already registered.`}
     }
 
-    const hashPassword: string = await bcrypt.hash(password, saltRounds);
-
-    const newPublicUserID = uuidv7();
-    const insertResponse = await this.modelUser.insertUser(username, hashPassword, newPublicUserID);
-
-    if(insertResponse?.status == false){
-      console.log(insertResponse);
-      return {status: insertResponse.status, message: "Register failed"};
+    const resultNewUser = await this.userService.addNewUser(username, password);
+    if(!resultNewUser.status){
+      return {status: false, message: resultNewUser.message}
     }
 
-    const response = await this.modelUser.selectUserByUsername(username);
+    const resultUserData = await this.userService.getUserDataByUsername(username);
+    if(!resultUserData){
+      return {status: false, message: "Error getting user data"}
+    }
+
+    const resultNewTokens = await this.authService.handlerTokens(resultUserData.userID, resultUserData.username, resultUserData.publicUserID);
+    if(!resultNewTokens.status){
+      return {status: false, message: resultNewTokens.message}
+    }
     
-    if (response) {
-      console.log(username + "asdfasd");
-
-      
-      const result = await this.authService.handlerTokens(response.userID, username, response.publicUserID);
-      if (!result.status) {
-        return { statusCode: result.statusCode, message: "Error regenerate tokens" };
-      }
-
-      return {
-        status: true,
-        sessionToken: result.sessionToken, 
-        refreshToken: result.refreshToken,  
-        publicUserID: response.publicUserID,
-        username: response.username,
-        message: "Successfully tokens regenerated",
-      };
-
-    } else {
-      return { status: false, message: `User not found` };
+    return {
+      status: true,
+      username: resultUserData.username,
+      publicUserID: resultUserData.publicUserID,
+      sessionToken: resultNewTokens.sessionToken,   
+      refreshToken: resultNewTokens.refreshToken,   
+      message: "Successfully logged in"
     }
   }
 
+
   async deleteUser(sessionToken: string, refreshToken: string, password: string){
-    if(!this.jwtSessionRefresh.validitySessionToken(sessionToken) || !this.jwtSessionRefresh.validityRefreshToken(refreshToken)){
-      return {statusCode: 401, message: "Invalid token"}
+    if(!this.jwtSessionRefreshService.validitySessionToken(sessionToken) || !this.jwtSessionRefreshService.validityRefreshToken(refreshToken)){
+      return {status: false, message: "Invalid token"}
     }
 
-    const getPayload = this.jwtSessionRefresh.getRefreshTokenPayload(refreshToken)
-    if(!getPayload.status || !getPayload.data){
-      return {statusCode: 401, message: "Error getting token data"}
-    }
-    
-    const payload: JwtPayload = getPayload.data;
-    const userId: number = await this.modelUser.selectIDbyPublicID(payload.publicUserId);
-    if(!userId){
-      return {statusCode: 401, message: "Error getting id"}
+    const resultPayload = this.jwtSessionRefreshService.getRefreshTokenPayload(refreshToken)
+    if(!resultPayload.status || !resultPayload.data){
+      return {status: false, message: "Error getting token data"}
+    }   
+    const payload: JwtPayload = resultPayload.data;
+
+    const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID)
+    if(!resultUserData){
+      return {
+        status: false,
+        message: "Error getting user data",
+      };
     }
 
-    const isPasswordValid = await this.authService.validatePassword(password, userId);
-    if(!isPasswordValid.status){
-      return { statusCode: isPasswordValid.status, message: isPasswordValid.message}
+    const isPasswordValid = await this.authService.validatePassword(password, resultUserData.userID);
+    if( !isPasswordValid.status){
+      return { status: isPasswordValid.status, message: isPasswordValid.message}
     }
+
+    // const resultDelete = await this.userService.deleteUserData(resultUserData.userID, isPasswordValid.status);
+    // if(!resultDelete.status){
+    //   return {status: false, message: resultDelete.message}
+    // }
+
+    const resultDeleteRefreshTokens = await this.authService.deleteAllUserRefreshTokens(resultUserData.userID);
+    if(!resultDeleteRefreshTokens.status){
+      return { status: false, message: resultDeleteRefreshTokens.message}
+    }
+
+    const resultDeleteCities = await this.cityService.deleteAllUserCities(resultUserData.userID, isPasswordValid.status);
+    if(!resultDeleteCities.status){
+      return {status: false, message: resultDeleteCities.message}
+    }
+
+    const resultDeleteUser = await this.userService.deleteUserData(resultUserData.userID, isPasswordValid.status);
+    if(!resultDeleteUser.status){
+      return {status: false, message: resultDeleteUser.message}
+    }
+
+    return {status: true, message: resultDeleteUser.message}
   }
 
 }

@@ -7,6 +7,7 @@ import { saltRounds } from "../utils/saltRounds";
 import AuthService from "../services/AuthService";
 
 
+
 export default class AuthControl {
   constructor(
     private modelUser: UsersModel, 
@@ -50,10 +51,16 @@ export default class AuthControl {
     }
     const payload: JwtPayload = getPayload.data;
     
-    const userId = await this.modelUser.selectIDbyPublicID(payload.publicUserID)
+    const resultUserData = await this.modelUser.selectUserDatabyPublicID(payload.publicUserID)
+    if(!resultUserData){
+      return {
+        statusCode: 400,
+        message: "Error getting user data",
+      };
+    }
 
     console.log(payload,  "REFRESH TOKEN PAYLOAD REGENERATE TOKENS");
-    console.log(userId, "USER ID EM RegenerateTokens");
+    console.log(resultUserData.userID, "USER ID EM RegenerateTokens");
     
     if(!this.jwtSessionRefresh.validityRefreshToken(refreshToken)){
       return {
@@ -62,7 +69,7 @@ export default class AuthControl {
       };
     }
 
-    const verifyHashRT = await this.authService.isHashRefreshTokenValid(userId, payload.publicTokenID);
+    const verifyHashRT = await this.authService.isHashRefreshTokenValid(resultUserData.userID, payload.publicTokenID);
     console.log(verifyHashRT,  "VERIFY HASH TOKEN");
     if(verifyHashRT.status === false){
       return {
@@ -71,7 +78,7 @@ export default class AuthControl {
       }
     }
 
-    const result = await this.authService.handlerTokens(userId, payload.username, payload.publicUserID)
+    const result = await this.authService.handlerTokens(resultUserData.userID, payload.username, payload.publicUserID)
     if(!result.status){
       return {statusCode: result.statusCode, message: "Error regenerate tokens"}
     }
@@ -84,13 +91,19 @@ export default class AuthControl {
     };
   }
 
-  async logout(refreshToken: string): Promise<void>{
+  async logout(refreshToken: string){
     //
     const payload = this.authService.verifyTokenPayload(refreshToken);
    
     if(payload && payload.publicUserID && payload.publicTokenID){
-      const userId = await this.modelUser.selectIDbyPublicID(payload.publicUserID);
-      await this.authService.deleteOldHashRefreshToken(userId, payload.publicTokenID);
+      const resultUserData = await this.modelUser.selectUserDatabyPublicID(payload.publicUserID)
+      if(!resultUserData){
+        return {
+          statusCode: 400,
+          message: "Error getting user data",
+        };
+      }
+      await this.authService.deleteOldHashRefreshToken(resultUserData.userID, payload.publicTokenID);
     }
   }
 

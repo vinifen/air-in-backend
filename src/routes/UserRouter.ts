@@ -9,16 +9,24 @@ import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 import { removeCookie } from "../utils/removeCookie";
 import AuthControl from "../controller/AuthControl";
 import AuthService from "../services/AuthService";
+import UserService from "../services/UserService";
+import CityService from "../services/CityService";
 
-export default async function UserRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, authService: AuthService}) {
+export default async function UserRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, authService: AuthService, cityService: CityService}) {
   const usersModel = new UsersModel(injections.db);
-  const userControl = new UserControl(usersModel, injections.jwtSessionRefreshS, injections.authService);
+  const userService = new UserService(usersModel);
+  const userControl = new UserControl(usersModel, injections.jwtSessionRefreshS, injections.authService, userService, injections.cityService);
 
   app.get("/users", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {sessionToken} = request.cookies as {sessionToken: string}
    
     try {
       const data = await userControl.getUser(sessionToken);
+      if(!data.status){
+        removeCookie(reply, "sessionToken");
+        removeCookie(reply, "refreshToken");
+        return sendResponse(reply, 200, {message: "Invalid session"});
+      }
       return sendResponse(reply, 200, { content: {publicUserID: data.publicUserID, username: data.username}, sessionTokenStatus: true,});
     } catch (error: any) {
       console.error("[Error in GET /users:]", error);
@@ -62,11 +70,24 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
   app.delete("/users", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {sessionToken} = request.cookies as {sessionToken: string};
     const {refreshToken} = request.cookies as {refreshToken: string};
+    const {password} = request.body as {password: string};
    
     try {
-      
+
+      //REMOVER REFRESH TOKENS BACKEND
+
+      const data = await userControl.deleteUser(sessionToken, refreshToken, password);
+      // removeCookie(reply, "sessionToken");
+      // removeCookie(reply, "refreshToken");
+      if(!data.status){
+        return sendResponse(reply, 401, {message: data.message})
+      }
+      return sendResponse(reply, 200, {message: data.message})
     } catch (error: any) {
-      
+      // removeCookie(reply, "sessionToken");
+      // removeCookie(reply, "refreshToken");
+      console.error("[Error in DELETE /users:]", error);
+      return sendResponse(reply, 500, { message: error.message || error });
     }
   });
 }
