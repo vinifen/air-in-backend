@@ -4,7 +4,7 @@ import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 import RefreshTokenModel from "../model/RefreshTokenModel";
 import bcrypt from "bcrypt";
 import { saltRounds } from "../utils/saltRounds";
-import { uuidv7 } from "uuidv7";
+
 
 export default class AuthControl {
   constructor(private modelUser: UsersModel, private refreshTokenModel: RefreshTokenModel, private jwtSessionRefresh: JWTSessionRefreshService) {}
@@ -13,27 +13,40 @@ export default class AuthControl {
 
     const response = await this.modelUser.selectUserByUsername(usnm);
     if(!response){
-      return {statusLogin: 400, message: "Invalid Credentials"}
+      return {statusCode: 400, message: "Invalid Credentials"}
     }
   
-    const isPasswordValid = await bcrypt.compare(pswd, response.password);
-    if(!isPasswordValid){
-      return {statusLogin: 400, message: "Invalid Credentials"}
+    const isPasswordValid = await this.validatePassword(pswd, response.userID);
+    if(!isPasswordValid.status){
+      return { statusCode: isPasswordValid.status, message: isPasswordValid.message}
     }
 
     const result = await this.handlerTokens(response.userID, response.username, response.publicUserID);
     if(!result || !result.status){
-      return { status: false, statusLogin: result.statusCode}
+      return { status: false, statusCode: result.statusCode}
     }
 
     return {
-      statusLogin: 200,
+      statusCode: 200,
       username: response.username,
       publicUserID: response.publicUserID,
       sessionToken: result.sessionToken,   
       refreshToken: result.refreshToken,   
       message: "Successfully logged in"
     };
+  }
+
+  async validatePassword(password: string, userdId: number){
+    const hashPassword = await this.modelUser.selectPasswordByUserID(userdId);
+    if(!hashPassword){
+      return {status: false, statusCode: 400, message: "Invalid Credentials"}
+    }
+    console.log(hashPassword, password, "AUTH PASSWORD")
+    const isPasswordValid = await bcrypt.compare(password, hashPassword);
+    if(!isPasswordValid){
+      return {status: false, statusCode: 400, message: "Invalid Credentials"}
+    }
+    return {status: true, statusCode: 200, message: "Password valid"}
   }
 
   async regenerateTokens(refreshToken: string) {
@@ -77,8 +90,8 @@ export default class AuthControl {
     };
   }
 
-  private async handlerTokens(userId: number, username: string, publicUserID: string){
-    const newTokens = await this.jwtSessionRefresh.generateNewTokens(userId, username, publicUserID);
+  async handlerTokens(userId: number, username: string, publicUserID: string){
+    const newTokens = await this.jwtSessionRefresh.generateNewTokens(username, publicUserID);
     if(!newTokens || !newTokens.status || !newTokens.refreshToken || !newTokens.sessionToken){
       return { 
         status: false, 
@@ -94,9 +107,9 @@ export default class AuthControl {
       status: true, 
       statusCode: 200,
       sessionToken: newTokens.sessionToken, 
-      refreshToken: newTokens.refreshToken};
+      refreshToken: newTokens.refreshToken
+    }
   }
-
 
   async logout(refreshToken: string): Promise<void>{
     const payload = this.verifyTokenPayload(refreshToken);

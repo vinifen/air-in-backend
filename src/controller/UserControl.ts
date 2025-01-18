@@ -4,10 +4,11 @@ import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 import bcrypt from "bcrypt";
 import { saltRounds } from "../utils/saltRounds";
 import { uuidv7 } from "uuidv7";
+import AuthControl from "./AuthControl";
 
 export default class UserControl {
 
-  constructor(private modelUser: UsersModel, private jwtSessionRefresh: JWTSessionRefreshService) {}
+  constructor(private modelUser: UsersModel, private jwtSessionRefresh: JWTSessionRefreshService, private authControl: AuthControl) {}
 
   // async getAllUsers() {
   //   const result = await this.modelUser.selectAllUsers();
@@ -71,21 +72,45 @@ export default class UserControl {
     if (response) {
       console.log(username + "asdfasd");
 
-      const newPublicTokenID = uuidv7();
-      const paylod: JwtPayload = { publicUserID: newPublicUserID, username: response.username, publicTokenID: newPublicTokenID};  
       
-      const sessionToken: string = await this.jwtSessionRefresh.generateSessionToken(paylod);
-      const refreshToken: string = await this.jwtSessionRefresh.generateRefreshToken(paylod);
+      const result = await this.authControl.handlerTokens(response.userID, username, response.publicUserID);
+      if (!result.status) {
+        return { statusCode: result.statusCode, message: "Error regenerate tokens" };
+      }
 
       return {
-        sessionToken: sessionToken, 
-        refreshToken: refreshToken, 
-        username: response.username, 
-        publicUserID: response.publicUserID 
-      }
+        status: true,
+        sessionToken: result.sessionToken, 
+        refreshToken: result.refreshToken,  
+        publicUserID: response.publicUserID,
+        username: response.username,
+        message: "Successfully tokens regenerated",
+      };
 
     } else {
       return { status: false, message: `User not found` };
+    }
+  }
+
+  async deleteUser(sessionToken: string, refreshToken: string, password: string){
+    if(!this.jwtSessionRefresh.validitySessionToken(sessionToken) || !this.jwtSessionRefresh.validityRefreshToken(refreshToken)){
+      return {statusCode: 401, message: "Invalid token"}
+    }
+
+    const getPayload = this.jwtSessionRefresh.getRefreshTokenPayload(refreshToken)
+    if(!getPayload.status || !getPayload.data){
+      return {statusCode: 401, message: "Error getting token data"}
+    }
+    
+    const payload: JwtPayload = getPayload.data;
+    const userId: number = await this.modelUser.selectIDbyPublicID(payload.publicUserId);
+    if(!userId){
+      return {statusCode: 401, message: "Error getting id"}
+    }
+
+    const isPasswordValid = await this.authControl.validatePassword(password, userId);
+    if(!isPasswordValid.status){
+      return { statusCode: isPasswordValid.status, message: isPasswordValid.message}
     }
   }
 

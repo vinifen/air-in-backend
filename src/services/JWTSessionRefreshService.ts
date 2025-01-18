@@ -39,9 +39,10 @@ export default class JWTSessionRefreshService{
     const token: string = this.jwtRefresh.generateToken(data, "7d");
     return token;
   }
+  
 
-  async generateNewTokens(userID: number, username: string, publicUserID: string){
-    if(!username || !userID || !publicUserID){
+  async generateNewTokens(username: string, publicUserID: string){
+    if(!username || !publicUserID){
       return {status: false, message: "Error generating tokens: Invalid parameters"}
     }
     const newPublicSessionTokenID = uuidv7();
@@ -66,4 +67,6 @@ export default class JWTSessionRefreshService{
       }
     }
   }
+
+  
 }
