@@ -17,7 +17,7 @@ export default function AuthRouter(app: FastifyInstance, injections: { db: DbSer
     const {username, password} = request.body as {username: string, password: string};
     try{
       const data = await authControl.loginUser(username, password);
-      if (data.statusLogin != 200) {
+      if (data.statusCode != 200) {
         return sendResponse(reply, 401, {message: data.message});
       }
 
@@ -28,7 +28,7 @@ export default function AuthRouter(app: FastifyInstance, injections: { db: DbSer
       sendCookie(reply, "sessionToken", data.sessionToken);
       sendCookie(reply, "refreshToken", data.refreshToken);
   
-      return sendResponse(reply, data.statusLogin, {content: { publicUserID: data.publicUserID, username: data.username}, message: data.message});
+      return sendResponse(reply, data.statusCode, {content: { publicUserID: data.publicUserID, username: data.username}, message: data.message});
 
     } catch (error: any) {
       console.error("[Error in POST /auth/login:]", error);

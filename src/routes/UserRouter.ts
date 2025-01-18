@@ -7,10 +7,11 @@ import { verifyAuth } from "../middleware/verifyAuth";
 import { sendCookie } from "../utils/sendCookie";
 import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 import { removeCookie } from "../utils/removeCookie";
+import AuthControl from "../controller/AuthControl";
 
-export default async function UserRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService}) {
+export default async function UserRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, authControl: AuthControl}) {
   const usersModel = new UsersModel(injections.db);
-  const userControl = new UserControl(usersModel, injections.jwtSessionRefreshS);
+  const userControl = new UserControl(usersModel, injections.jwtSessionRefreshS, injections.authControl);
 
   app.get("/users", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {sessionToken} = request.cookies as {sessionToken: string}
@@ -32,7 +33,7 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
     try {
       const data = await userControl.postUser(username, password);
 
-      if(data.status == false){
+      if(!data.status){
         return sendResponse(reply, 409, {message: data.message});
       }
       if(data.sessionToken && data.refreshToken){ 
@@ -59,6 +60,7 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
 
   app.delete("/users", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {sessionToken} = request.cookies as {sessionToken: string};
+    const {refreshToken} = request.cookies as {refreshToken: string};
    
     try {
       

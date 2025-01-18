@@ -20,7 +20,6 @@ export default class UsersModel {
         userID: response[0].id,
         publicUserID: response[0].public_id,
         username: response[0].username,
-        password: response[0].password,
       };
     } catch (error) {
       console.error('Error in selectUserById:', error);
@@ -40,7 +39,6 @@ export default class UsersModel {
       userID: response[0].id,
       publicUserID: response[0].public_id,
       username: response[0].username,
-      password: response[0].password,
     };
   }
 
@@ -54,6 +52,18 @@ export default class UsersModel {
   
     return response[0].id;
     
+  }
+
+  async selectPasswordByUserID(userId: number){
+    console.log(userId, "USER ID PASSWORD");
+    const query = "SELECT password FROM users WHERE id = ?";
+    const response: RowDataPacket[] = await this.dbService.getQuery(query, [userId]);
+    console.log(response[0].password);
+    if (response.length === 0) {
+      return null;
+    }
+  
+    return response[0].password;
   }
 
   async insertUser(username: string, password: string, publicUserID: string) {
@@ -76,6 +86,29 @@ export default class UsersModel {
     } catch (error) {
       console.error("Error inserting user:", error);
       return { status: false, message: 'An error occurred while inserting the user.' };
+    }
+  }
+
+  async deleteUserById(userID: number) {
+    try {
+      console.log(userID, "USER ID TO DELETE");
+  
+      const userExists = await this.selectUserById(userID);
+      if (!userExists) {
+        return { status: false, message: `No user found with ID: ${userID}` };
+      }
+  
+      const query = "DELETE FROM users WHERE id = ?";
+      const response: RowDataPacket[] = await this.dbService.getQuery(query, [userID]);
+  
+      if (response.length === 0) {
+        return { status: false, message: `Failed to delete user with ID: ${userID}` };
+      }
+  
+      return { status: true, message: `User with ID: ${userID} successfully deleted.` };
+    } catch (error) {
+      console.error("Error in deleteUserById:", error);
+      return { status: false, message: "An error occurred while deleting the user." };
     }
   }
 }
