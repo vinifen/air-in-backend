@@ -13,7 +13,7 @@ export default class UsersModel {
       const response = await this.dbService.getQuery(query, value);
       console.log(response, "RESPONSE SELECT USER RID BY PUBLIC")
       if (!response || response.length === 0) {
-        throw new Error(`No user found with ID: ${userID}`);
+        return null;
       }
   
       return {
@@ -23,7 +23,7 @@ export default class UsersModel {
       };
     } catch (error) {
       console.error('Error in selectUserById:', error);
-      throw error;
+      return null;
     }
   }
 
@@ -42,15 +42,19 @@ export default class UsersModel {
     };
   }
 
-  async selectIDbyPublicID(publicUserID: string) {
-    const query = "SELECT id FROM users WHERE public_id = ?";
+  async selectUserDatabyPublicID(publicUserID: string) {
+    const query = "SELECT * FROM users WHERE public_id = ?";
     const response: RowDataPacket[] = await this.dbService.getQuery(query, [publicUserID]);
   
     if (response.length === 0) {
       return null;
     }
   
-    return response[0].id;
+    return {
+      userID: response[0].id,
+      username: response[0].username,
+      publicUserID: response[0].public_id
+    };
     
   }
 
@@ -89,8 +93,11 @@ export default class UsersModel {
     }
   }
 
-  async deleteUserById(userID: number) {
+  async deleteUserById(userID: number, validator: boolean) {
     try {
+      if(!validator){
+        return {status: false, message: "Delete user data not authorized"}
+      }
       console.log(userID, "USER ID TO DELETE");
   
       const userExists = await this.selectUserById(userID);
@@ -99,9 +106,10 @@ export default class UsersModel {
       }
   
       const query = "DELETE FROM users WHERE id = ?";
-      const response: RowDataPacket[] = await this.dbService.getQuery(query, [userID]);
-  
-      if (response.length === 0) {
+      await this.dbService.getQuery(query, [userID]);
+
+      const isUserKeepExists = await this.selectUserById(userID);
+      if (isUserKeepExists !== null) {
         return { status: false, message: `Failed to delete user with ID: ${userID}` };
       }
   

@@ -59,4 +59,19 @@ export default class RefreshTokenModel {
     }
   }
 
+  async deleteAllRefreshTokensUser(userID: number){
+    console.log(userID, "INFORMACOES DELETE");
+    if(!userID){
+      return {status: false, message: "Failed to delete all refresh token: Invalid parameters provided."}
+    }
+
+    const query = "DELETE FROM refresh_tokens WHERE id_users = ?";
+    const response: RowDataPacket[] = await this.dbService.getQuery(query, [userID]);
+    if (response) {
+      return { status: true, message: "Refresh token delete successfully.", response: response };
+    } else {
+      return {status: false, message: "Failed to delete refresh token."}
+    }
+  }
+
 }
