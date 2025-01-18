@@ -5,10 +5,11 @@ import bcrypt from "bcrypt";
 import { saltRounds } from "../utils/saltRounds";
 import { uuidv7 } from "uuidv7";
 import AuthControl from "./AuthControl";
+import AuthService from "../services/AuthService";
 
 export default class UserControl {
 
-  constructor(private modelUser: UsersModel, private jwtSessionRefresh: JWTSessionRefreshService, private authControl: AuthControl) {}
+  constructor(private modelUser: UsersModel, private jwtSessionRefresh: JWTSessionRefreshService, private authService: AuthService) {}
 
   // async getAllUsers() {
   //   const result = await this.modelUser.selectAllUsers();
@@ -73,7 +74,7 @@ export default class UserControl {
       console.log(username + "asdfasd");
 
       
-      const result = await this.authControl.handlerTokens(response.userID, username, response.publicUserID);
+      const result = await this.authService.handlerTokens(response.userID, username, response.publicUserID);
       if (!result.status) {
         return { statusCode: result.statusCode, message: "Error regenerate tokens" };
       }
@@ -108,7 +109,7 @@ export default class UserControl {
       return {statusCode: 401, message: "Error getting id"}
     }
 
-    const isPasswordValid = await this.authControl.validatePassword(password, userId);
+    const isPasswordValid = await this.authService.validatePassword(password, userId);
     if(!isPasswordValid.status){
       return { statusCode: isPasswordValid.status, message: isPasswordValid.message}
     }

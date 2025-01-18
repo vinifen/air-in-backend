@@ -12,10 +12,11 @@ import { configVariables } from './utils/configVariables';
 import UsersModel from './model/UsersModel';
 import RefreshTokenModel from './model/RefreshTokenModel';
 import AuthControl from './controller/AuthControl';
+import AuthService from './services/AuthService';
 
 const app = fastify();
 
-const database = new DbService(
+const databaseService = new DbService(
   configVariables.DB_HOST,
   configVariables.DB_USER,
   configVariables.DB_PASSWORD,
@@ -24,20 +25,21 @@ const database = new DbService(
 
 const sessionJWT = new JWTService(configVariables.JWT_SESSION_KEY);
 const refreshJWT = new JWTService(configVariables.JWT_REFRESH_KEY);
+const sessionRefreshJWTService = new JWTSessionRefreshService(sessionJWT, refreshJWT);
 
-const sessionRefreshJWT = new JWTSessionRefreshService(sessionJWT, refreshJWT, );
 const weatherApiService = new WeatherApiService(configVariables.WEATHER_API_KEY);
 
-const usersModel = new UsersModel(database);
-const refreshTokenModel = new RefreshTokenModel(database);
 
-const authControl = new AuthControl(usersModel, refreshTokenModel, sessionRefreshJWT);
+const usersModel = new UsersModel(databaseService);
+const refreshTokenModel = new RefreshTokenModel(databaseService);
+
+const authService = new AuthService(usersModel, sessionRefreshJWTService, refreshTokenModel);
 
 app.register(fastifyCors, configVariables.corsOptions);
 app.register(fastifyCookie);
-app.register(CityRouter, { db: database, weatherApiS: weatherApiService, jwtSessionRefreshS: sessionRefreshJWT });
-app.register(UserRouter, { db: database, jwtSessionRefreshS: sessionRefreshJWT, authControl });
-app.register(AuthRouter, { db: database, jwtSessionRefreshS: sessionRefreshJWT })
+app.register(CityRouter, { db: databaseService, weatherApiS: weatherApiService, jwtSessionRefreshS: sessionRefreshJWTService });
+app.register(UserRouter, { db: databaseService, jwtSessionRefreshS: sessionRefreshJWTService, authService });
+app.register(AuthRouter, { db: databaseService, jwtSessionRefreshS: sessionRefreshJWTService, authService })
 
 app.listen({ port: configVariables.SERVER_PORT, host: configVariables.SERVER_HOSTNAME }).then(() => {
   console.log(`HTTP server running on port: ${configVariables.SERVER_PORT}`);
