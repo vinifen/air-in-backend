@@ -14,6 +14,7 @@ export default class DbService {
 
   async getQuery(sql: string, values: any[] = []): Promise<RowDataPacket[]> {
     return new Promise((resolve, reject) => {
+      console.log(values, "VALUES GET QUERY");
       this.conn.query<RowDataPacket[]>(sql, values, (err, results) => {
         if (err) {
           console.error(`[MySQL Query Error in getQuery:] Failed to execute query: ${sql} with values: ${JSON.stringify(values)}. Error:`, err);

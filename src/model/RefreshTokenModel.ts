@@ -19,23 +19,28 @@ export default class RefreshTokenModel {
     }
   }
 
-  async selectHashRefreshToken(userID: number, publicTokenID: string){
+  async selectHashRefreshToken(userID: number, publicTokenID: string) {
     console.log(userID, publicTokenID, "INFORMACAO INSERTREFRESHTOKEN SELECT");
-    if(!userID || !publicTokenID){
-      throw new Error('Failed to select refresh: Invalid parameters provided.')
+
+    if (!userID || !publicTokenID) {
+        throw new Error('Failed to select refresh: Invalid parameters provided.');
     }
+    
     const query = "SELECT * FROM refresh_tokens WHERE id_users = ? AND public_id = ?";
+    console.log("Executing query:", query, "with values:", [userID, publicTokenID]);
+
     const response: RowDataPacket[] = await this.dbService.getQuery(query, [userID, publicTokenID]);
-    console.log(response, "REPONSE ROWDATA SELECT REFRESH TOKEN");
-    if(response.length === 0){
-      return {status: false, message: "Hash token not found"}
+    console.log("Query response:", response);
+
+    if (response.length === 0) {
+      return { status: false, message: "Hash token not found" };
     }
 
     return {
-      status: true,
-      tokenID: response[0].id,
-      publicTokenID: response[0].public_id,
-      token: response[0].token,
+        status: true,
+        tokenID: response[0].id,
+        publicTokenID: response[0].public_id,
+        token: response[0].token,
     };
   }
 

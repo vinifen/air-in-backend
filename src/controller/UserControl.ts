@@ -13,7 +13,6 @@ import CityService from "../services/CityService";
 export default class UserControl {
 
   constructor(
-    private modelUser: UsersModel, 
     private jwtSessionRefreshService: JWTSessionRefreshService, 
     private authService: AuthService,
     private userService: UserService,
@@ -98,11 +97,6 @@ export default class UserControl {
       return { status: isPasswordValid.status, message: isPasswordValid.message}
     }
 
-    // const resultDelete = await this.userService.deleteUserData(resultUserData.userID, isPasswordValid.status);
-    // if(!resultDelete.status){
-    //   return {status: false, message: resultDelete.message}
-    // }
-
     const resultDeleteRefreshTokens = await this.authService.deleteAllUserRefreshTokens(resultUserData.userID);
     if(!resultDeleteRefreshTokens.status){
       return { status: false, message: resultDeleteRefreshTokens.message}
@@ -119,6 +113,87 @@ export default class UserControl {
     }
 
     return {status: true, message: resultDeleteUser.message}
+  }
+
+  async editUsername(newUsername: string, sessionToken: string, password: string){
+    
+    if(!this.jwtSessionRefreshService.validitySessionToken(sessionToken)){
+      return {status: false, message: "Invalid token"}
+    }
+
+    const resultPayload = this.jwtSessionRefreshService.getSessionTokenPayload(sessionToken)
+    if(!resultPayload.status || !resultPayload.data){
+      return {status: false, message: "Error getting token data"}
+    }   
+    const payload: JwtPayload = resultPayload.data;
+    const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID)
+    console.log("RESULST USERDATA PUT USERNAME", resultUserData);
+    const isPasswordValid = await this.authService.validatePassword(password, resultUserData.userID);
+    if( !isPasswordValid.status){
+      return { status: isPasswordValid.status, message: isPasswordValid.message}
+    }
+
+    const resultUpdateUsername = await this.userService.updateUsername(newUsername, resultUserData.userID)
+    if(!resultUpdateUsername.status){
+      return {status: false, message: resultUpdateUsername.message}
+    }
+
+    const resultNewTokens = await this.authService.handlerTokens(resultUserData.userID, resultUserData.username, resultUserData.publicUserID)
+    if(!resultNewTokens.status){
+      return {status: false, message: resultNewTokens.message}
+    }
+    
+    return {
+      status: true,
+      username: resultUserData.username,
+      publicUserID: resultUserData.publicUserID,
+      sessionToken: resultNewTokens.sessionToken,   
+      refreshToken: resultNewTokens.refreshToken,   
+      message: "Successfully username edited"
+    }
+  }
+
+  async editPassword(newPassword: string, sessionToken: string, oldPassword: string){
+    
+    if(!this.jwtSessionRefreshService.validitySessionToken(sessionToken)){
+      return {status: false, message: "Invalid token"}
+    }
+
+    const resultPayload = this.jwtSessionRefreshService.getSessionTokenPayload(sessionToken)
+    if(!resultPayload.status || !resultPayload.data){
+      return {status: false, message: "Error getting token data"}
+    }   
+    const payload: JwtPayload = resultPayload.data;
+    const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID)
+    console.log("RESULST USERDATA PUT PASSWORD", resultUserData);
+    const isPasswordValid = await this.authService.validatePassword(oldPassword, resultUserData.userID);
+    if( !isPasswordValid.status){
+      return { status: isPasswordValid.status, message: isPasswordValid.message}
+    }
+
+    const resultUpdateUsername = await this.userService.updatePassword(newPassword, resultUserData.userID)
+    if(!resultUpdateUsername.status){
+      return {status: false, message: resultUpdateUsername.message}
+    }
+
+    const resultDeleteRefreshTokens = await this.authService.deleteAllUserRefreshTokens(resultUserData.userID);
+    if(!resultDeleteRefreshTokens.status){
+      return { status: false, message: resultDeleteRefreshTokens.message}
+    }
+
+    const resultNewTokens = await this.authService.handlerTokens(resultUserData.userID, resultUserData.username, resultUserData.publicUserID)
+    if(!resultNewTokens.status){
+      return {status: false, message: resultNewTokens.message}
+    }
+    
+    return {
+      status: true,
+      username: resultUserData.username,
+      publicUserID: resultUserData.publicUserID,
+      sessionToken: resultNewTokens.sessionToken,   
+      refreshToken: resultNewTokens.refreshToken,   
+      message: "Successfully password edited"
+    }
   }
 
 }

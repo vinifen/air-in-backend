@@ -67,5 +67,16 @@ export default class UserService{
     }
   }
 
+  async updateUsername(newUsername: string, userID: number){
+    const resultUpdateUsername = this.modelUser.alterUsername(userID, newUsername);
+    return resultUpdateUsername;
+  }
+
+  async updatePassword(newPassword: string, userID: number){
+    const newHashPassword: string = await toHash(newPassword);
+    const resultUpdateUsername = this.modelUser.alterPassword(userID, newHashPassword);
+    return resultUpdateUsername;
+  }
+
   
 }

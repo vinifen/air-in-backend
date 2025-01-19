@@ -54,7 +54,7 @@ export default class AuthService{
     if(!payload.publicTokenID || !payload.publicUserID){
       return null;
     }
-    return payload;
+    return {publicUserID: payload.publicUserID, username: payload.username, publicTokenID: payload.publicTokenID};
   }
 
   async saveHashRefreshToken(hashRT: string, userID: number, publicTokenID: string){
@@ -83,7 +83,9 @@ export default class AuthService{
 
 
   async deleteOldHashRefreshToken(userID: number, publicTokenID: string){
-    await this.refreshTokenModel.deleteRefreshToken(userID, publicTokenID);
+    console.log(userID, publicTokenID, "DELETE REFRESH TOKEN NO SERVICE");
+    const resultDeleteOldRT = await this.refreshTokenModel.deleteRefreshToken(userID, publicTokenID);
+    console.log(resultDeleteOldRT, "resultDeleteOldRT")
   }
 
   async deleteAllUserRefreshTokens(userID: number){

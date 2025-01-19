@@ -15,7 +15,7 @@ import CityService from "../services/CityService";
 export default async function UserRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, authService: AuthService, cityService: CityService}) {
   const usersModel = new UsersModel(injections.db);
   const userService = new UserService(usersModel);
-  const userControl = new UserControl(usersModel, injections.jwtSessionRefreshS, injections.authService, userService, injections.cityService);
+  const userControl = new UserControl(injections.jwtSessionRefreshS, injections.authService, userService, injections.cityService);
 
   app.get("/users", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {sessionToken} = request.cookies as {sessionToken: string}
@@ -43,7 +43,7 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
       const data = await userControl.postUser(username, password);
 
       if(!data.status){
-        return sendResponse(reply, 409, {message: data.message});
+        return sendResponse(reply, 400, {message: data.message});
       }
       if(data.sessionToken && data.refreshToken){ 
         sendCookie(
@@ -73,20 +73,81 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
     const {password} = request.body as {password: string};
    
     try {
-
-      //REMOVER REFRESH TOKENS BACKEND
-
       const data = await userControl.deleteUser(sessionToken, refreshToken, password);
-      // removeCookie(reply, "sessionToken");
-      // removeCookie(reply, "refreshToken");
+      removeCookie(reply, "sessionToken");
+      removeCookie(reply, "refreshToken");
       if(!data.status){
         return sendResponse(reply, 401, {message: data.message})
       }
       return sendResponse(reply, 200, {message: data.message})
     } catch (error: any) {
-      // removeCookie(reply, "sessionToken");
-      // removeCookie(reply, "refreshToken");
+      removeCookie(reply, "sessionToken");
+      removeCookie(reply, "refreshToken");
       console.error("[Error in DELETE /users:]", error);
+      return sendResponse(reply, 500, { message: error.message || error });
+    }
+  });
+
+  app.put("/users/username", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
+    const {sessionToken} = request.cookies as {sessionToken: string};
+    const {newUsername} = request.body as {newUsername: string}
+    const {password} = request.body as {password: string};
+    
+    try {
+      const data = await userControl.editUsername(newUsername, sessionToken, password);
+
+      if(!data.status){
+        return sendResponse(reply, 400, {message: data.message});
+      }
+      if(data.sessionToken && data.refreshToken){ 
+        sendCookie(
+          reply, 
+          "sessionToken", 
+          data.sessionToken,
+          7 * 24 * 60 * 60 * 1000,
+        );
+        sendCookie(
+          reply, 
+          "refreshToken", 
+          data.refreshToken,
+          3600 * 1000, 
+        );
+      }
+      return sendResponse(reply, 201, { message: `Successfully username edited`, content: {publicUserID: data.publicUserID, username: data.username}});
+    } catch (error: any) {
+      console.error("[Error in PUT /users/username:]", error);
+      return sendResponse(reply, 500, { message: error.message || error });
+    }
+  });
+
+  app.put("/users/password", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
+    const {sessionToken} = request.cookies as {sessionToken: string};
+    const {newPassword} = request.body as {newPassword: string}
+    const {oldPassword} = request.body as {oldPassword: string};
+    
+    try {
+      const data = await userControl.editPassword(newPassword, sessionToken, oldPassword);
+
+      if(!data.status){
+        return sendResponse(reply, 400, {message: data.message});
+      }
+      if(data.sessionToken && data.refreshToken){ 
+        sendCookie(
+          reply, 
+          "sessionToken", 
+          data.sessionToken,
+          7 * 24 * 60 * 60 * 1000,
+        );
+        sendCookie(
+          reply, 
+          "refreshToken", 
+          data.refreshToken,
+          3600 * 1000, 
+        );
+      }
+      return sendResponse(reply, 201, { message: `Successfully password edited`, content: {publicUserID: data.publicUserID, username: data.username}});
+    } catch (error: any) {
+      console.error("[Error in PUT /users/password:]", error);
       return sendResponse(reply, 500, { message: error.message || error });
     }
   });

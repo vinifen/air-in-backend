@@ -119,4 +119,45 @@ export default class UsersModel {
       return { status: false, message: "An error occurred while deleting the user." };
     }
   }
+
+  async alterUsername(userId: number, newUsername: string) {
+    try {
+      console.log(userId, newUsername, "DADOS ALTER USERNAME")
+      const existingUser = await this.selectUserByUsername(newUsername);
+      if (existingUser) {
+        return { status: false, message: 'Username is already taken.' };
+      }
+  
+      const userExists = await this.selectUserById(userId);
+      if (!userExists) {
+        return { status: false, message: `User with ID: ${userId} not found.` };
+      }
+
+      const query = "UPDATE users SET username = ? WHERE id = ?";
+      await this.dbService.getQuery(query, [newUsername, userId]);
+  
+      const updatedUser = await this.selectUserById(userId);
+      if (updatedUser && updatedUser.username === newUsername) {
+        return { status: true, message: 'Username updated successfully.' };
+      } else {
+        return { status: false, message: 'Failed to update username.' };
+      }
+    } catch (error) {
+      console.error("Error in alterUsername:", error);
+      return { status: false, message: 'An error occurred while updating the username.' };
+    }
+  }
+
+  async alterPassword(userId: number, newHashPassword: string) {
+    try {
+      console.log(userId, newHashPassword, "DADOS ALTER PASSWORD")
+
+      const query = "UPDATE users SET password = ? WHERE id = ?";
+      await this.dbService.getQuery(query, [newHashPassword, userId]);
+      return {status: true, message: "New password changed successfully"}
+    } catch (error) {
+      console.error("Error in alterUsername:", error);
+      return { status: false, message: 'An error occurred while updating the username.' };
+    }
+  }
 }
