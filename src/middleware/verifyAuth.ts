@@ -8,7 +8,7 @@ export const verifyAuth = (sessionRefreshJWT: JWTSessionRefreshService) => {
     const sessionToken: string | undefined = request.cookies ? request.cookies.sessionToken : undefined;
     const refreshToken: string | undefined = request.cookies ? request.cookies.refreshToken : undefined;
     const refreshTokenExist: boolean = refreshToken ? true : false;
-
+    console.log(refreshTokenExist, refreshToken, sessionToken);
     if (!sessionToken) {
       return sendResponse(
         reply,

@@ -103,7 +103,10 @@ export default class AuthControl {
           message: "Error getting user data",
         };
       }
-      await this.authService.deleteOldHashRefreshToken(resultUserData.userID, payload.publicTokenID);
+      const publicTokenID: string = payload.publicTokenID;
+      const resultDeleteOldRT = await this.authService.deleteOldHashRefreshToken(resultUserData.userID, publicTokenID);
+      console.log(resultDeleteOldRT, "resultDeletOldRT");
+
     }
   }
 
