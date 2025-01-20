@@ -8,12 +8,16 @@ import { verifyAuth } from "../middleware/verifyAuth";
 import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 import IWeatherAPIResponse from "../interfaces/IWeatherAPIResponse";
 import UsersModel from "../model/UsersModel";
+import UserService from "../services/UserService";
+import CityService from "../services/CityService";
 
 
 export default function CityRouter(app: FastifyInstance, injections: {db: DbService, weatherApiS: WeatherApiService, jwtSessionRefreshS: JWTSessionRefreshService}) {
   const citiesModel = new CitiesModel(injections.db);
   const usersModel = new UsersModel(injections.db);
-  const cityControl = new CityControl(injections.weatherApiS, citiesModel, injections.jwtSessionRefreshS, usersModel);
+  const userService = new UserService(usersModel);
+  const cityService = new CityService(citiesModel);
+  const cityControl = new CityControl(injections.weatherApiS, citiesModel, injections.jwtSessionRefreshS, usersModel, userService, cityService);
 
   app.post("/cities-weather", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {cities} = request.body as {cities: string[]}

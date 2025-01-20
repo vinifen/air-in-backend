@@ -27,7 +27,7 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
         removeCookie(reply, "refreshToken");
         return sendResponse(reply, 200, {message: "Invalid session"});
       }
-      return sendResponse(reply, 200, { content: {publicUserID: data.publicUserID, username: data.username}, sessionTokenStatus: true,});
+      return sendResponse(reply, 200, { content: {publicUserID: data.publicUserID, username: data.username}, stStatus: true,});
     } catch (error: any) {
       console.error("[Error in GET /users:]", error);
       removeCookie(reply, "sessionToken");
