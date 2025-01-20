@@ -5,6 +5,7 @@ import RefreshTokenModel from "../model/RefreshTokenModel";
 import bcrypt from "bcrypt";
 import { saltRounds } from "../utils/saltRounds";
 import AuthService from "../services/AuthService";
+import UserService from "../services/UserService";
 
 
 
@@ -13,14 +14,24 @@ export default class AuthControl {
     private modelUser: UsersModel, 
     private refreshTokenModel: RefreshTokenModel, 
     private jwtSessionRefresh: JWTSessionRefreshService,
-    private authService: AuthService
+    private authService: AuthService,
+    private userService: UserService
   ) {}
 
   async loginUser(usnm: string, pswd: string){
     //
     const response = await this.modelUser.selectUserByUsername(usnm);
     if(!response){
-      return {statusCode: 400, message: "Invalid Credentials"}
+      return {statusCode: 400, message: "Invalid Credentials."}
+    }
+
+    const checkUsername = await this.userService.checkIfUsernameExists(usnm)
+    if(!checkUsername){
+      return {statusCode: 400, message: "Username not found."}
+    }
+
+    if(response.username !== usnm){
+      return {statusCode: 400, message: "Invalid Credentials."}
     }
   
     const isPasswordValid = await this.authService.validatePassword(pswd, response.userID);
@@ -92,11 +103,13 @@ export default class AuthControl {
   }
 
   async logout(refreshToken: string){
-    //
+    //C
+    console.log(refreshToken, "REFRESH TOKEN LOGOUT CONTROL")
     const payload = this.authService.verifyTokenPayload(refreshToken);
-   
+    console.log(payload, "AQUI LOGOUT")
     if(payload && payload.publicUserID && payload.publicTokenID){
       const resultUserData = await this.modelUser.selectUserDatabyPublicID(payload.publicUserID)
+      console.log(resultUserData, "RESULT USER DATA LOGOUT");
       if(!resultUserData){
         return {
           statusCode: 400,

@@ -8,11 +8,13 @@ import { sendCookie } from "../utils/sendCookie";
 import RefreshTokenModel from "../model/RefreshTokenModel";
 import { removeCookie } from "../utils/removeCookie";
 import AuthService from "../services/AuthService";
+import UserService from "../services/UserService";
 
 export default function AuthRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, authService: AuthService }){
   const refreshTokenModel = new RefreshTokenModel(injections.db);
   const usersModel = new UsersModel(injections.db);
-  const authControl = new AuthControl(usersModel, refreshTokenModel, injections.jwtSessionRefreshS, injections.authService);
+  const userService = new UserService (usersModel);
+  const authControl = new AuthControl(usersModel, refreshTokenModel, injections.jwtSessionRefreshS, injections.authService, userService);
 
   app.post("/auth/login", async (request, reply) => {
     const {username, password} = request.body as {username: string, password: string};
@@ -26,8 +28,18 @@ export default function AuthRouter(app: FastifyInstance, injections: { db: DbSer
         return sendResponse(reply, 500, { message: "Tokens not found" });
       }
       
-      sendCookie(reply, "sessionToken", data.sessionToken);
-      sendCookie(reply, "refreshToken", data.refreshToken);
+      sendCookie(
+        reply, 
+        "sessionToken", 
+        data.sessionToken,
+        1
+      );
+      sendCookie(
+        reply, 
+        "refreshToken", 
+        data.refreshToken,
+        3600 * 1000
+      );
   
       return sendResponse(reply, data.statusCode, {content: { publicUserID: data.publicUserID, username: data.username}, message: data.message});
 

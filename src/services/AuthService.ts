@@ -50,10 +50,11 @@ export default class AuthService{
 
 
   verifyTokenPayload(refreshToken: string){
-    const payload: JwtPayload = this.jwtSessionRefresh.getRefreshTokenPayload(refreshToken);
-    if(!payload.publicTokenID || !payload.publicUserID){
+    const getPayload: JwtPayload = this.jwtSessionRefresh.getRefreshTokenPayload(refreshToken);
+    if(!getPayload.status){
       return null;
     }
+    const payload = getPayload.data;
     return {publicUserID: payload.publicUserID, username: payload.username, publicTokenID: payload.publicTokenID};
   }
 

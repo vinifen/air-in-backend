@@ -32,13 +32,16 @@ export default class UserService{
   }
 
 
-  async verifyUsernameValidity(username: string){
+  async checkIfUsernameExists(username: string){
     const existingUser = await this.modelUser.selectUserByUsername(username);
-  
-    if (existingUser) {
+    if(!existingUser){
       return false;
     }
-    return true
+  
+    if(existingUser.username === username){
+      return true;
+    }
+    return false;
   }
 
 
@@ -77,6 +80,5 @@ export default class UserService{
     const resultUpdateUsername = this.modelUser.alterPassword(userID, newHashPassword);
     return resultUpdateUsername;
   }
-
   
 }

@@ -42,8 +42,8 @@ export default class UserControl {
   
 
   async postUser(username: string, password: string) {
-    const usernameValidity = await this.userService.verifyUsernameValidity(username);
-    if(!usernameValidity){
+    const usernameValidity = await this.userService.checkIfUsernameExists(username);
+    if(usernameValidity){
       return {status: false, message: `Username ${username} is already registered.`}
     }
 
@@ -115,6 +115,7 @@ export default class UserControl {
     return {status: true, message: resultDeleteUser.message}
   }
 
+
   async editUsername(newUsername: string, sessionToken: string, password: string){
     
     if(!this.jwtSessionRefreshService.validitySessionToken(sessionToken)){
@@ -152,6 +153,7 @@ export default class UserControl {
       message: "Successfully username edited"
     }
   }
+  
 
   async editPassword(newPassword: string, sessionToken: string, oldPassword: string){
     
