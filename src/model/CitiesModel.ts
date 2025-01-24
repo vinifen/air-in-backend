@@ -5,13 +5,10 @@ import DbService from "../services/DbService";
 export default class CitiesModel {
   constructor(private dbService: DbService) {}
 
-  async insertCities(cities: string[], userID: number) {
-    console.log(cities, userID);
+  async insertCity(data: [string, number][]) {
+    console.log(data);
     const query = "INSERT INTO cities(name, id_users) VALUES ?";
-    const data = cities.map(city => {
-      console.log("DENTRO MAP", city)
-      return [city, userID];
-    });
+    
     
     await this.dbService.getQuery(query, [data]);
     return data;
@@ -28,16 +25,17 @@ export default class CitiesModel {
     return data;
   }
 
+
   async selectUserCityByUserIdAndCityName(userID: number, city: string) {
     const query = "SELECT * FROM cities WHERE id_users = ? AND name = ?";
     const response: RowDataPacket[] = await this.dbService.getQuery(query, [userID, city]);
   
-    if (response.length > 0) {
-      return {data: response[0], status: true};
-    } else {
+    if (response.length == 0) {
       return {status: false}; 
-    }
+    }       
+    return {data: response[0], status: true};
   }
+
 
   async deleteAllUserCities(userID: number, validator: boolean) {
     try {
@@ -59,21 +57,34 @@ export default class CitiesModel {
     }
   }
 
-  async deleteCity(city: string, userID: number){
-    try {
-      const query = "DELETE FROM cities WHERE id_users = ? AND name = ?";
-      
-      const response = await this.dbService.getQuery(query, [userID, city]);
 
-      if (response.length === 0) {
-        return { status: true, message: "No cities found for this user to delete." };
+  async deleteCities(data: [string, number][]) {
+    try {
+      const deleteResults: { city: string; success: boolean }[] = [];
+  
+      for (const [city, userID] of data) {
+        const query = "DELETE FROM cities WHERE id_users = ? AND name = ?";
+        const response = await this.dbService.getQuery(query, [userID, city]);
+  
+        deleteResults.push({
+          city,
+          success: response.length > 0,
+        });
+      }
+
+      const failedDeletes = deleteResults.filter((result) => !result.success).map((result) => result.city);
+  
+      if (failedDeletes.length == 0) {
+        return {
+          status: false,
+          message: "Failed to delete cities",
+        };
       }
   
       return { status: true, message: "All cities deleted successfully." };
     } catch (error) {
-      console.error("Error in deleteAllUserCities:", error);
+      console.error("Error in deleteCities:", error);
       return { status: false, message: "An error occurred while deleting cities." };
     }
   }
-
 }
