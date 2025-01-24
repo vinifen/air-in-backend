@@ -15,9 +15,9 @@ import CityService from "../services/CityService";
 export default function CityRouter(app: FastifyInstance, injections: {db: DbService, weatherApiS: WeatherApiService, jwtSessionRefreshS: JWTSessionRefreshService}) {
   const citiesModel = new CitiesModel(injections.db);
   const usersModel = new UsersModel(injections.db);
-  const userService = new UserService(usersModel);
+  const userService = new UserService(usersModel, injections.jwtSessionRefreshS);
   const cityService = new CityService(citiesModel);
-  const cityControl = new CityControl(injections.weatherApiS, citiesModel, injections.jwtSessionRefreshS, usersModel, userService, cityService);
+  const cityControl = new CityControl(injections.weatherApiS, citiesModel, usersModel, userService, cityService);
 
   app.post("/cities-weather", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {cities} = request.body as {cities: string[]}
@@ -62,10 +62,18 @@ export default function CityRouter(app: FastifyInstance, injections: {db: DbServ
     }
   });
 
-  app.delete("/cities-weather", async (request, reply) => {
+  app.delete("/cities-weather", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {sessionToken} = request.cookies as {sessionToken: string};
+    const {cities} = request.body as {cities: string []}
     try {
-      
+      if(cities.length == 0){
+        return sendResponse(reply, 400, "No city to be excluded");
+      }
+      const resultCityControl = await cityControl.deleteCities(cities, sessionToken);
+      if(!resultCityControl.status){
+        return  sendResponse(reply, resultCityControl.statusCode, resultCityControl.message);
+      }
+      return sendResponse(reply, 200, resultCityControl.message);
     } catch (error: any) {
       console.error("[Error in delete /cities-weather]", error);
       return sendResponse(reply, 500, { message: error.message || error });

@@ -2,10 +2,13 @@ import { uuidv7 } from "uuidv7";
 import UsersModel from "../model/UsersModel";
 import { toHash } from "../utils/toHash";
 import AuthService from "./AuthService";
+import JWTSessionRefreshService from "./JWTSessionRefreshService";
+import { JwtPayload } from "jsonwebtoken";
 
 export default class UserService{
   constructor(
     private modelUser: UsersModel,
+    private jwtSessionRefreshS: JWTSessionRefreshService,
   ){}
 
   async deleteUserData(userID: number, validator: boolean){
@@ -20,7 +23,7 @@ export default class UserService{
   async verifyPublicUserIdData(publicUserID: string){
     const resultUserData = await this.modelUser.selectUserDatabyPublicID(publicUserID)
     if(!resultUserData || !resultUserData.userID){
-      return {status: false};
+      return {status: false, message: "User not found"};
     }
 
     return {
@@ -79,6 +82,20 @@ export default class UserService{
     const newHashPassword: string = await toHash(newPassword);
     const resultUpdateUsername = this.modelUser.alterPassword(userID, newHashPassword);
     return resultUpdateUsername;
+  }
+
+  async getUserDataBySessionToken(sessionToken: string){
+    const getPayload = this.jwtSessionRefreshS.getSessionTokenPayload(sessionToken);
+    if(!getPayload.status){
+      return {status: false, statusCode: 400, message: getPayload.message}
+    }
+    const payload: JwtPayload = getPayload.data;
+
+    const resultUserData = await this.verifyPublicUserIdData(payload.publicUserID);
+    if(!resultUserData.status || !resultUserData.userID){
+      return {status: false, statusCode: 500, message: "User data not found"}
+    }
+    return {status: true, statusCode: 200, data: resultUserData}
   }
   
 }

@@ -112,7 +112,7 @@ export default class UserControl {
       return {status: false, message: resultDeleteUser.message}
     }
 
-    return {status: true, message: resultDeleteUser.message}
+    return {status: true, message: "Account successfully deleted"}
   }
 
 

@@ -74,15 +74,13 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
    
     try {
       const data = await userControl.deleteUser(sessionToken, refreshToken, password);
-      removeCookie(reply, "sessionToken");
-      removeCookie(reply, "refreshToken");
       if(!data.status){
         return sendResponse(reply, 401, {message: data.message})
       }
-      return sendResponse(reply, 200, {message: data.message})
-    } catch (error: any) {
       removeCookie(reply, "sessionToken");
       removeCookie(reply, "refreshToken");
+      return sendResponse(reply, 200, {message: data.message})
+    } catch (error: any) {
       console.error("[Error in DELETE /users:]", error);
       return sendResponse(reply, 500, { message: error.message || error });
     }
