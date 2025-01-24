@@ -59,4 +59,21 @@ export default class CitiesModel {
     }
   }
 
+  async deleteCity(city: string, userID: number){
+    try {
+      const query = "DELETE FROM cities WHERE id_users = ? AND name = ?";
+      
+      const response = await this.dbService.getQuery(query, [userID, city]);
+
+      if (response.length === 0) {
+        return { status: true, message: "No cities found for this user to delete." };
+      }
+  
+      return { status: true, message: "All cities deleted successfully." };
+    } catch (error) {
+      console.error("Error in deleteAllUserCities:", error);
+      return { status: false, message: "An error occurred while deleting cities." };
+    }
+  }
+
 }

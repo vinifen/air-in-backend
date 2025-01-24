@@ -11,7 +11,7 @@ export default class CityControl {
   constructor (
     private apiWeatherService: WeatherApiService, 
     private modelCities: CitiesModel, 
-    private jwtSessionRefreshS: JWTSessionRefreshService,
+  
     private modelUser: UsersModel,
     private userService: UserService,
     private cityService: CityService,
@@ -20,16 +20,11 @@ export default class CityControl {
 
   async postCitiesWeather(cities: string[], sessionToken: string) {
     //
-    const getPayload = this.jwtSessionRefreshS.getSessionTokenPayload(sessionToken);
-    if(!getPayload.status){
-      return {status: false, statusCode: 400, message: getPayload.message}
+    const getUserData = await this.userService.getUserDataBySessionToken(sessionToken);
+    if(!getUserData.status || !getUserData.data){
+      return {status: false, statusCode: getUserData.statusCode, message: getUserData.message}
     }
-    const payload: JwtPayload = getPayload.data;
-
-    const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID);
-    if(!resultUserData.status || !resultUserData.userID){
-      return {status: false, statusCode: 500, message: "Error getting all cities"}
-    }
+    const resultUserData = getUserData.data;
   
     const citiesWeatherResult = await this.fetchWeatherCities(cities);
   
@@ -53,16 +48,11 @@ export default class CityControl {
 
   async getAllUserCitiesWeather(sessionToken: string){
     //
-    const getPayload = this.jwtSessionRefreshS.getSessionTokenPayload(sessionToken);
-    if(!getPayload.status){
-      return {status: false, statusCode: 400, message: getPayload.message}
+    const getUserData = await this.userService.getUserDataBySessionToken(sessionToken);
+    if(!getUserData.status || !getUserData.data){
+      return {status: false, statusCode: getUserData.statusCode, message: getUserData.message}
     }
-    const payload: JwtPayload = getPayload.data;
-
-    const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID);
-    if(!resultUserData.status || !resultUserData.userID){
-      return {status: false, statusCode: 500, message: "Error getting all cities"}
-    }
+    const resultUserData = getUserData.data;
 
     const allCitiesNames: string[] = await this.modelCities.selectAllUserCities(resultUserData.userID);
     const citiesWeatherResult = await this.fetchWeatherCities(allCitiesNames);
@@ -75,6 +65,21 @@ export default class CityControl {
   async fetchWeatherCities(cities: string[]){
     const citiesWeather = await this.apiWeatherService.request(cities);
     return citiesWeather;
+  }
+
+  async deleteCities(cities: string[], sessionToken: string){
+    const getUserData = await this.userService.getUserDataBySessionToken(sessionToken);
+    if(!getUserData.status || !getUserData.data){
+      return {status: false, statusCode: getUserData.statusCode, message: getUserData.message}
+    }
+    const resultUserData = getUserData.data;
+
+    const resultRemoveCities = await this.cityService.deleteCities(cities, resultUserData.userID);
+    if(!resultRemoveCities.status){
+      return {status: false, statusCode: 400, message: resultRemoveCities.message}
+    }
+
+    return {status: true, statusCode: 200, message:resultRemoveCities.message}
   }
 
 
