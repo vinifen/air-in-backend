@@ -17,7 +17,7 @@ export default function CityRouter(app: FastifyInstance, injections: {db: DbServ
   const usersModel = new UsersModel(injections.db);
   const userService = new UserService(usersModel, injections.jwtSessionRefreshS);
   const cityService = new CityService(citiesModel);
-  const cityControl = new CityControl(injections.weatherApiS, citiesModel, usersModel, userService, cityService);
+  const cityControl = new CityControl(injections.weatherApiS, userService, cityService);
 
   app.post("/cities-weather", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {cities} = request.body as {cities: string[]}

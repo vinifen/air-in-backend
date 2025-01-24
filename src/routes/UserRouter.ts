@@ -14,7 +14,7 @@ import CityService from "../services/CityService";
 
 export default async function UserRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, authService: AuthService, cityService: CityService}) {
   const usersModel = new UsersModel(injections.db);
-  const userService = new UserService(usersModel);
+  const userService = new UserService(usersModel, injections.jwtSessionRefreshS);
   const userControl = new UserControl(injections.jwtSessionRefreshS, injections.authService, userService, injections.cityService);
 
   app.get("/users", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {

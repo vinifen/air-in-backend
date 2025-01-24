@@ -12,6 +12,16 @@ export default class CityService {
     return resultDeleteCities;
   }
 
+  async addNewCities(cities: string[], userID: number){
+    const citiesDeleteWithUserID: [string, number][] = this.mergeCitiesToUserID(cities, userID);
+    await this.modelCities.insertCity(citiesDeleteWithUserID);
+  }
+
+  async getAllCitiesByUserID(userID: number){
+    const resultCitiesModel = await this.modelCities.selectAllUserCities(userID);
+    return resultCitiesModel;
+  }
+
 
   async removeExistingCities(userID: number, cities: string[]){
     if(!userID || !cities){
@@ -46,30 +56,21 @@ export default class CityService {
   }
 
   async deleteCities(cities: string[], userID: number) {
-    const citiesDeleteWithUserID: { city: string; userID: number }[] = this.mergeCitiesToUserID(cities, userID);
+    const citiesDeleteWithUserID: [string, number][] = this.mergeCitiesToUserID(cities, userID);
 
-    const deleteResults = await Promise.all(
-      citiesDeleteWithUserID.map(async (value) => {
-        const resultModelCities = await this.modelCities.deleteCity(value.city, value.userID);
-        return {city: value.city, status: resultModelCities.status}
-      })
-    );
+    const deleteResults = await this.modelCities.deleteCities(citiesDeleteWithUserID)
 
-    const failedDeletes = deleteResults.filter((result) => !result.status).map((result) => result.city);
-
-    if (failedDeletes.length > 0) {
-      return {status: false, message: `Error deleting the following cities:: ${failedDeletes.join(", ")}`};
+    if (!deleteResults.status) {
+      return {status: false, message: deleteResults.message};
     }
 
     return {status: true, message: "All cities have been successfully deleted",};
   }
   
 
-  mergeCitiesToUserID(cities: string[], IDuser: number){
-    const citiesWithUserID: {city: string, userID: number}[] = cities.map(city => {
-      return {city: city, userID: IDuser};
-    });
-    console.log(citiesWithUserID, "CITIES REMOVE with USER ID");
-    return citiesWithUserID;
+  private mergeCitiesToUserID(cities: string[], IDuser: number) {
+    const citiesWithUserID: [string, number][] = cities.map((city) => [city, IDuser]);
+    console.log(citiesWithUserID);
+    return citiesWithUserID; 
   }
 }

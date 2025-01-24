@@ -13,7 +13,7 @@ import UserService from "../services/UserService";
 export default function AuthRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, authService: AuthService }){
   const refreshTokenModel = new RefreshTokenModel(injections.db);
   const usersModel = new UsersModel(injections.db);
-  const userService = new UserService (usersModel);
+  const userService = new UserService (usersModel, injections.jwtSessionRefreshS);
   const authControl = new AuthControl(usersModel, refreshTokenModel, injections.jwtSessionRefreshS, injections.authService, userService);
 
   app.post("/auth/login", async (request, reply) => {

@@ -10,16 +10,12 @@ import CityService from "../services/CityService";
 export default class CityControl {
   constructor (
     private apiWeatherService: WeatherApiService, 
-    private modelCities: CitiesModel, 
-  
-    private modelUser: UsersModel,
     private userService: UserService,
     private cityService: CityService,
   ){}
   
 
   async postCitiesWeather(cities: string[], sessionToken: string) {
-    //
     const getUserData = await this.userService.getUserDataBySessionToken(sessionToken);
     if(!getUserData.status || !getUserData.data){
       return {status: false, statusCode: getUserData.statusCode, message: getUserData.message}
@@ -36,7 +32,7 @@ export default class CityControl {
         return { status: false, statusCode: 400, message: filteredCities.message };
       }
   
-      await this.modelCities.insertCities(filteredCities.data, resultUserData.userID);
+      await this.cityService.addNewCities(filteredCities.data, resultUserData.userID);
   
       const citiesWeather: IWeatherAPIResponse[] = citiesWeatherResult.data;
       return { status: true, statusCode: 200, message: "Cities processed successfully", data: citiesWeather };
@@ -47,14 +43,13 @@ export default class CityControl {
 
 
   async getAllUserCitiesWeather(sessionToken: string){
-    //
     const getUserData = await this.userService.getUserDataBySessionToken(sessionToken);
     if(!getUserData.status || !getUserData.data){
       return {status: false, statusCode: getUserData.statusCode, message: getUserData.message}
     }
     const resultUserData = getUserData.data;
 
-    const allCitiesNames: string[] = await this.modelCities.selectAllUserCities(resultUserData.userID);
+    const allCitiesNames: string[] = await this.cityService.getAllCitiesByUserID(resultUserData.userID);
     const citiesWeatherResult = await this.fetchWeatherCities(allCitiesNames);
 
     const citiesWeather: IWeatherAPIResponse[] = citiesWeatherResult.data;
