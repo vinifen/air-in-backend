@@ -10,36 +10,27 @@ import { removeCookie } from "../utils/removeCookie";
 import AuthService from "../services/AuthService";
 import UserService from "../services/UserService";
 
-export default function AuthRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, authService: AuthService }){
+export default function AuthRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, userService: UserService}){
   const refreshTokenModel = new RefreshTokenModel(injections.db);
-  const usersModel = new UsersModel(injections.db);
-  const userService = new UserService (usersModel, injections.jwtSessionRefreshS);
-  const authControl = new AuthControl(usersModel, refreshTokenModel, injections.jwtSessionRefreshS, injections.authService, userService);
+  const authService = new AuthService(injections.jwtSessionRefreshS,refreshTokenModel)
+  const authControl = new AuthControl(refreshTokenModel, injections.jwtSessionRefreshS, authService, injections.userService);
 
   app.post("/auth/login", async (request, reply) => {
-    const {username, password} = request.body as {username: string, password: string};
+    const {username, password, rememberMe} = request.body as {username: string, password: string, rememberMe: boolean};
     try{
-      const data = await authControl.loginUser(username, password);
-      if (data.statusCode != 200) {
-        return sendResponse(reply, 401, {message: data.message});
-      }
-
-      if (!data.sessionToken || !data.refreshToken) {
-        return sendResponse(reply, 500, { message: "Tokens not found" });
+      const data = await authControl.loginUser(username, password, rememberMe);
+      if (!data.status || !data.sessionToken) {
+        return sendResponse(reply, data.statusCode || 400, {message: data.message});
       }
       
-      sendCookie(
-        reply, 
-        "sessionToken", 
-        data.sessionToken,
-        1
-      );
-      sendCookie(
-        reply, 
-        "refreshToken", 
-        data.refreshToken,
-        3600 * 1000
-      );
+      if (rememberMe) {
+        if (data.sessionToken && data.refreshToken) {
+          sendCookie(reply, "sessionToken", data.sessionToken, 7 * 24 * 60 * 60 * 1000);
+          sendCookie(reply, "refreshToken", data.refreshToken, 3600 * 1000);
+        }
+      } else if (data.sessionToken && !data.refreshToken) {
+        sendCookie(reply, "sessionToken", data.sessionToken, 7 * 24 * 60 * 60 * 1000);
+      }
   
       return sendResponse(reply, data.statusCode, {content: { publicUserID: data.publicUserID, username: data.username}, message: data.message});
 

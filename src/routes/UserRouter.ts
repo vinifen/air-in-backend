@@ -11,11 +11,15 @@ import AuthControl from "../controller/AuthControl";
 import AuthService from "../services/AuthService";
 import UserService from "../services/UserService";
 import CityService from "../services/CityService";
+import RefreshTokenModel from "../model/RefreshTokenModel";
+import CitiesModel from "../model/CitiesModel";
 
-export default async function UserRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, authService: AuthService, cityService: CityService}) {
-  const usersModel = new UsersModel(injections.db);
-  const userService = new UserService(usersModel, injections.jwtSessionRefreshS);
-  const userControl = new UserControl(injections.jwtSessionRefreshS, injections.authService, userService, injections.cityService);
+export default async function UserRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, userService: UserService}) {
+  const citiesModel = new CitiesModel(injections.db);
+  const refreshTokenModel = new RefreshTokenModel(injections.db);
+  const cityService = new CityService(citiesModel)
+  const authService = new AuthService(injections.jwtSessionRefreshS ,refreshTokenModel);
+  const userControl = new UserControl(injections.jwtSessionRefreshS, authService, injections.userService, cityService);
 
   app.get("/users", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {sessionToken} = request.cookies as {sessionToken: string}
@@ -36,44 +40,44 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
     }
   });
 
-  app.post("/users", async (request, reply) => { 
-    const {username, password} = request.body as {username: string, password: string}
+
+  app.post("/users", async (request, reply) => {
+    const { username, password, rememberMe } = request.body as { username: string; password: string; rememberMe: boolean };
   
     try {
-      const data = await userControl.postUser(username, password);
-
-      if(!data.status){
-        return sendResponse(reply, 400, {message: data.message});
+      const data = await userControl.postUser(username, password, rememberMe);
+  
+      if (!data.status) {
+        return sendResponse(reply, 400, { message: data.message });
       }
-      if(data.sessionToken && data.refreshToken){ 
-        sendCookie(
-          reply, 
-          "sessionToken", 
-          data.sessionToken,
-          7 * 24 * 60 * 60 * 1000,
-        );
-        sendCookie(
-          reply, 
-          "refreshToken", 
-          data.refreshToken,
-          3600 * 1000, 
-        );
+  
+      if (rememberMe) {
+        if (data.sessionToken && data.refreshToken) {
+          sendCookie(reply, "sessionToken", data.sessionToken, 7 * 24 * 60 * 60 * 1000);
+          sendCookie(reply, "refreshToken", data.refreshToken, 3600 * 1000);
+        }
+      } else if (data.sessionToken && !data.refreshToken) {
+        sendCookie(reply, "sessionToken", data.sessionToken, 7 * 24 * 60 * 60 * 1000);
       }
-      return sendResponse(reply, 201, { message: `Successfully created user`, content: {publicUserID: data.publicUserID, username: data.username}});
-
+  
+      return sendResponse(reply, 201, {
+        message: `Successfully created user`,
+        content: { publicUserID: data.publicUserID, username: data.username }
+      });
+      
     } catch (error: any) {
       console.error("[Error in POST /users:]", error);
-      return sendResponse(reply, 500, { message: error.message || error });
+      return sendResponse(reply, 500, { message: error.message || "Unexpected error occurred" });
     }
   });
 
+
   app.delete("/users", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {sessionToken} = request.cookies as {sessionToken: string};
-    const {refreshToken} = request.cookies as {refreshToken: string};
     const {password} = request.body as {password: string};
    
     try {
-      const data = await userControl.deleteUser(sessionToken, refreshToken, password);
+      const data = await userControl.deleteUser(sessionToken, password);
       if(!data.status){
         return sendResponse(reply, 401, {message: data.message})
       }
@@ -85,6 +89,7 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
       return sendResponse(reply, 500, { message: error.message || error });
     }
   });
+
 
   app.put("/users/username", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {sessionToken} = request.cookies as {sessionToken: string};
@@ -117,6 +122,7 @@ export default async function UserRouter(app: FastifyInstance, injections: { db:
       return sendResponse(reply, 500, { message: error.message || error });
     }
   });
+
 
   app.put("/users/password", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
     const {sessionToken} = request.cookies as {sessionToken: string};

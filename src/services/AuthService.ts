@@ -8,7 +8,6 @@ import { toHash } from "../utils/toHash";
 
 export default class AuthService{
   constructor(
-    private modelUser: UsersModel,
     private jwtSessionRefresh: JWTSessionRefreshService,
     private refreshTokenModel: RefreshTokenModel
   ){}
@@ -35,12 +34,12 @@ export default class AuthService{
     }
   }
 
-  async validatePassword(password: string, userdId: number){
-    const hashPassword = await this.modelUser.selectPasswordByUserID(userdId);
-    if(!hashPassword){
+  async validatePassword(password: string, hashPassword: string){
+    console.log(hashPassword, password, "AUTH PASSWORDddddddddddddd")
+    if(!hashPassword || !password){
       return {status: false, statusCode: 400, message: "Invalid Credentials"}
     }
-    console.log(hashPassword, password, "AUTH PASSWORD")
+    
     const isPasswordValid = await bcrypt.compare(password, hashPassword);
     if(!isPasswordValid){
       return {status: false, statusCode: 400, message: "Invalid Credentials"}
@@ -49,8 +48,8 @@ export default class AuthService{
   }
 
 
-  verifyTokenPayload(refreshToken: string){
-    const getPayload: JwtPayload = this.jwtSessionRefresh.getRefreshTokenPayload(refreshToken);
+  verifyRefreshTokenPayload(refreshToken: string){
+    const getPayload: JwtPayload = this.jwtSessionRefresh.getSessionTokenPayload(refreshToken);
     if(!getPayload.status){
       return null;
     }

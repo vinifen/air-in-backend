@@ -1,9 +1,6 @@
 import { JwtPayload } from "jsonwebtoken";
-import UsersModel from "../model/UsersModel";
 import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 import RefreshTokenModel from "../model/RefreshTokenModel";
-import bcrypt from "bcrypt";
-import { saltRounds } from "../utils/saltRounds";
 import AuthService from "../services/AuthService";
 import UserService from "../services/UserService";
 
@@ -11,32 +8,48 @@ import UserService from "../services/UserService";
 
 export default class AuthControl {
   constructor(
-    private modelUser: UsersModel, 
     private refreshTokenModel: RefreshTokenModel, 
     private jwtSessionRefresh: JWTSessionRefreshService,
     private authService: AuthService,
     private userService: UserService
   ) {}
 
-  async loginUser(usnm: string, pswd: string){
-    //
-    const response = await this.modelUser.selectUserByUsername(usnm);
+  async loginUser(usnm: string, pswd: string, rememberMe: boolean){
+    const response = await this.userService.getUserDataByUsername(usnm);
     if(!response){
-      return {statusCode: 400, message: "Invalid Credentials."}
+      return {status: false, statusCode: 400, message: "Invalid Credentials."}
     }
 
     const checkUsername = await this.userService.checkIfUsernameExists(usnm)
     if(!checkUsername){
-      return {statusCode: 400, message: "Username not found."}
+      return {status: false, statusCode: 400, message: "Username not found."}
     }
 
     if(response.username !== usnm){
-      return {statusCode: 400, message: "Invalid Credentials."}
+      return {status: false, statusCode: 400, message: "Invalid Credentials."}
     }
   
-    const isPasswordValid = await this.authService.validatePassword(pswd, response.userID);
+    const resultHashPassword = await this.userService.getHashPassword(response.userID);
+    if(!resultHashPassword.status){
+      return {status: false, statusCode: 500, message: resultHashPassword.message}
+    }
+    const hashPassword = resultHashPassword.password
+    const isPasswordValid = await this.authService.validatePassword(pswd, hashPassword);
     if(!isPasswordValid.status){
-      return { statusCode: isPasswordValid.status, message: isPasswordValid.message}
+      return {status: false, statusCode: isPasswordValid.status, message: isPasswordValid.message}
+    }
+
+    if(rememberMe === false){
+      const newSessionPayload: JwtPayload = { publicUserID: response.publicUserID, username: response.username };
+      const resultSessionToken = await this.jwtSessionRefresh.generateSessionToken(newSessionPayload)
+      return {
+        status: true, 
+        statusCode: 200, 
+        sessionToken: resultSessionToken.token, 
+        message: "Successfully logged in",
+        username: response.username,
+        publicUserID: response.publicUserID,
+      }
     }
 
     const result = await this.authService.handlerTokens(response.userID, response.username, response.publicUserID);
@@ -45,6 +58,7 @@ export default class AuthControl {
     }
 
     return {
+      status: true,
       statusCode: 200,
       username: response.username,
       publicUserID: response.publicUserID,
@@ -55,14 +69,13 @@ export default class AuthControl {
   }
 
   async regenerateTokens(refreshToken: string) {
-    //
     const getPayload = this.jwtSessionRefresh.getRefreshTokenPayload(refreshToken);
     if(!getPayload.status){
       return {statusCode: 400, message: getPayload.message}
     }
     const payload: JwtPayload = getPayload.data;
     
-    const resultUserData = await this.modelUser.selectUserDatabyPublicID(payload.publicUserID)
+    const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID)
     if(!resultUserData){
       return {
         statusCode: 400,
@@ -105,10 +118,10 @@ export default class AuthControl {
   async logout(refreshToken: string){
     //C
     console.log(refreshToken, "REFRESH TOKEN LOGOUT CONTROL")
-    const payload = this.authService.verifyTokenPayload(refreshToken);
+    const payload = this.authService.verifyRefreshTokenPayload(refreshToken);
     console.log(payload, "AQUI LOGOUT")
     if(payload && payload.publicUserID && payload.publicTokenID){
-      const resultUserData = await this.modelUser.selectUserDatabyPublicID(payload.publicUserID)
+      const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID)
       console.log(resultUserData, "RESULT USER DATA LOGOUT");
       if(!resultUserData){
         return {
