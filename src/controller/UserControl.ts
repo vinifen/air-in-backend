@@ -41,7 +41,7 @@ export default class UserControl {
   }
   
 
-  async postUser(username: string, password: string) {
+  async postUser(username: string, password: string, rememberMe: boolean) {
     const usernameValidity = await this.userService.checkIfUsernameExists(username);
     if(usernameValidity){
       return {status: false, message: `Username ${username} is already registered.`}
@@ -55,6 +55,18 @@ export default class UserControl {
     const resultUserData = await this.userService.getUserDataByUsername(username);
     if(!resultUserData){
       return {status: false, message: "Error getting user data"}
+    }
+
+    if(rememberMe === false){
+      const newSessionPayload: JwtPayload = { publicUserID: resultUserData.publicUserID, username: resultUserData.username };
+      const resultSessionToken = await this.jwtSessionRefreshService.generateSessionToken(newSessionPayload)
+      return {
+        status: true, 
+        sessionToken: resultSessionToken.token, 
+        message: "Successfully logged in",
+        username: resultUserData.username,
+        publicUserID: resultUserData.publicUserID 
+      }
     }
 
     const resultNewTokens = await this.authService.handlerTokens(resultUserData.userID, resultUserData.username, resultUserData.publicUserID);
@@ -73,26 +85,23 @@ export default class UserControl {
   }
 
 
-  async deleteUser(sessionToken: string, refreshToken: string, password: string){
-    if(!this.jwtSessionRefreshService.validitySessionToken(sessionToken) || !this.jwtSessionRefreshService.validityRefreshToken(refreshToken)){
-      return {status: false, message: "Invalid token"}
+  async deleteUser(sessionToken: string, password: string){
+    if(!this.jwtSessionRefreshService.validitySessionToken(sessionToken) || !password){
+      return {status: false, message: "Invalid entries"}
     }
 
-    const resultPayload = this.jwtSessionRefreshService.getRefreshTokenPayload(refreshToken)
-    if(!resultPayload.status || !resultPayload.data){
-      return {status: false, message: "Error getting token data"}
-    }   
-    const payload: JwtPayload = resultPayload.data;
-
-    const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID)
-    if(!resultUserData){
-      return {
-        status: false,
-        message: "Error getting user data",
-      };
+    const getUserData = await this.userService.getUserDataBySessionToken(sessionToken);
+    if(!getUserData.status || !getUserData.data){
+      return {status: false, statusCode: getUserData.statusCode, message: getUserData.message}
     }
+    const resultUserData = getUserData.data;
 
-    const isPasswordValid = await this.authService.validatePassword(password, resultUserData.userID);
+    const resultHashPassword = await this.userService.getHashPassword(resultUserData.userID);
+    if(!resultHashPassword.status){
+      return {status: false, message: resultHashPassword.message}
+    }
+    const hashPassword = resultHashPassword.password
+    const isPasswordValid = await this.authService.validatePassword(password, hashPassword);
     if( !isPasswordValid.status){
       return { status: isPasswordValid.status, message: isPasswordValid.message}
     }
@@ -129,7 +138,12 @@ export default class UserControl {
     const payload: JwtPayload = resultPayload.data;
     const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID)
     console.log("RESULST USERDATA PUT USERNAME", resultUserData);
-    const isPasswordValid = await this.authService.validatePassword(password, resultUserData.userID);
+    const resultHashPassword = await this.userService.getHashPassword(resultUserData.userID);
+    if(!resultHashPassword.status){
+      return {status: false, message: resultHashPassword.message}
+    }
+    const hashPassword = resultHashPassword.password
+    const isPasswordValid = await this.authService.validatePassword(password, hashPassword);
     if( !isPasswordValid.status){
       return { status: isPasswordValid.status, message: isPasswordValid.message}
     }
@@ -168,7 +182,12 @@ export default class UserControl {
     const payload: JwtPayload = resultPayload.data;
     const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID)
     console.log("RESULST USERDATA PUT PASSWORD", resultUserData);
-    const isPasswordValid = await this.authService.validatePassword(oldPassword, resultUserData.userID);
+    const resultHashPassword = await this.userService.getHashPassword(resultUserData.userID);
+    if(!resultHashPassword.status){
+      return {status: false, message: resultHashPassword.message}
+    }
+    const hashPassword = resultHashPassword.password
+    const isPasswordValid = await this.authService.validatePassword(oldPassword, hashPassword);
     if( !isPasswordValid.status){
       return { status: isPasswordValid.status, message: isPasswordValid.message}
     }

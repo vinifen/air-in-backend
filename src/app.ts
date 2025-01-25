@@ -10,11 +10,8 @@ import JWTSessionRefreshService from './services/JWTSessionRefreshService';
 import AuthRouter from './routes/AuthRouter';
 import { configVariables } from './utils/configVariables';
 import UsersModel from './model/UsersModel';
-import RefreshTokenModel from './model/RefreshTokenModel';
-import AuthControl from './controller/AuthControl';
-import AuthService from './services/AuthService';
-import CityService from './services/CityService';
-import CitiesModel from './model/CitiesModel';
+import UserService from './services/UserService';
+
 
 const app = fastify();
 
@@ -31,18 +28,15 @@ const sessionRefreshJWTService = new JWTSessionRefreshService(sessionJWT, refres
 
 const weatherApiService = new WeatherApiService(configVariables.WEATHER_API_KEY);
 
-
 const usersModel = new UsersModel(databaseService);
-const refreshTokenModel = new RefreshTokenModel(databaseService);
-const citiesModel = new CitiesModel(databaseService)
-const authService = new AuthService(usersModel, sessionRefreshJWTService, refreshTokenModel);
-const cityService = new CityService(citiesModel)
+const userService = new UserService(usersModel, sessionRefreshJWTService);
+
 
 app.register(fastifyCors, configVariables.corsOptions);
 app.register(fastifyCookie);
-app.register(CityRouter, { db: databaseService, weatherApiS: weatherApiService, jwtSessionRefreshS: sessionRefreshJWTService });
-app.register(UserRouter, { db: databaseService, jwtSessionRefreshS: sessionRefreshJWTService, authService, cityService });
-app.register(AuthRouter, { db: databaseService, jwtSessionRefreshS: sessionRefreshJWTService, authService })
+app.register(CityRouter, { db: databaseService, weatherApiS: weatherApiService, jwtSessionRefreshS: sessionRefreshJWTService, userService });
+app.register(UserRouter, { db: databaseService, jwtSessionRefreshS: sessionRefreshJWTService, userService });
+app.register(AuthRouter, { db: databaseService, jwtSessionRefreshS: sessionRefreshJWTService, userService })
 
 app.listen({ port: configVariables.SERVER_PORT, host: configVariables.SERVER_HOSTNAME }).then(() => {
   console.log(`HTTP server running on port: ${configVariables.SERVER_PORT}`);

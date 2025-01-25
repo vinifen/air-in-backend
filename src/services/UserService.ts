@@ -97,5 +97,13 @@ export default class UserService{
     }
     return {status: true, statusCode: 200, data: resultUserData}
   }
+
+  async getHashPassword(userID: number){
+    const resultPassword = await this.modelUser.selectPasswordByUserID(userID);
+    if(!resultPassword){
+      return {status: false, message: "Password not found"}
+    }
+    return {status: true, password: resultPassword}
+  }
   
 }

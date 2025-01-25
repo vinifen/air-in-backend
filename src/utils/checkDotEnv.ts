@@ -18,6 +18,9 @@ export default function checkDotEnv(){
       DB_NAME="air_in_db"
       CORS_ORIGIN="http://localhost:4200"
       WEATHER_API_KEY="apikey**"
+
+      JWT_SESSION_KEY="jwtsessiontokenkey**";
+      JWT_REFRESH_KEY="jwtrefreshtokenkey**";
       
       Without the .env file, the application will use default 
       values, which may cause unexpected behavior and errors.
