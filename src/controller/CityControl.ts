@@ -52,7 +52,7 @@ export default class CityControl {
     return {status: true, statusCode: 200, data: citiesWeather};
   }
   
-
+  
   async fetchWeatherCities(cities: string[]){
     const citiesWeather = await this.apiWeatherService.request(cities);
     return citiesWeather;

@@ -5,7 +5,6 @@ export default class RefreshTokenModel {
   constructor(private dbService: DbService){}
 
   async insertRefreshToken(token: string, userID: number, publicTokenID: string){
-    console.log(token, userID, publicTokenID, "INFORMACAO INSERTREFRESHTOKEN");
     const query = "INSERT INTO refresh_tokens (token, id_users, public_id) VALUES (?,?,?)";
     if(!token || !userID || !publicTokenID){
       throw new Error('Failed to insert refresh token: Invalid parameters provided.')
@@ -20,17 +19,13 @@ export default class RefreshTokenModel {
   }
 
   async selectHashRefreshToken(userID: number, publicTokenID: string) {
-    console.log(userID, publicTokenID, "INFORMACAO INSERTREFRESHTOKEN SELECT");
-
     if (!userID || !publicTokenID) {
         throw new Error('Failed to select refresh: Invalid parameters provided.');
     }
     
     const query = "SELECT * FROM refresh_tokens WHERE id_users = ? AND public_id = ?";
-    console.log("Executing query:", query, "with values:", [userID, publicTokenID]);
 
     const response: RowDataPacket[] = await this.dbService.getQuery(query, [userID, publicTokenID]);
-    console.log("Query response:", response);
 
     if (response.length === 0) {
       return { status: false, message: "Hash token not found" };
@@ -45,12 +40,10 @@ export default class RefreshTokenModel {
   }
 
   async deleteRefreshToken(userID: number, publicTokenID: string){
-    console.log(userID, publicTokenID, "INFORMACOES DELETE");
     if(!userID || !publicTokenID){
       return {status: false, message: "Failed to delete refresh token: Invalid parameters provided."}
     }
-    const hashRT = await this.selectHashRefreshToken(userID, publicTokenID)
-    console.log(hashRT, "HASH RT");
+    const hashRT = await this.selectHashRefreshToken(userID, publicTokenID);
     if(hashRT.status === false || !hashRT.token){
       return {status: false, message: hashRT.message}
     }
@@ -65,7 +58,6 @@ export default class RefreshTokenModel {
   }
 
   async deleteAllRefreshTokensUser(userID: number){
-    console.log(userID, "INFORMACOES DELETE");
     if(!userID){
       return {status: false, message: "Failed to delete all refresh token: Invalid parameters provided."}
     }

@@ -41,7 +41,7 @@ export default function AuthRouter(app: FastifyInstance, injections: { db: DbSer
 
   app.post("/auth/refresh-token", async (request, reply) => {
     const refreshToken: string | undefined = request.cookies.refreshToken;
-    console.log(refreshToken, "TESTEEEEE");
+ 
     if (!refreshToken) {
       return sendResponse(reply, 400, { message: "Refresh token is required" });
     }
@@ -66,7 +66,7 @@ export default function AuthRouter(app: FastifyInstance, injections: { db: DbSer
         removeCookie(reply, "sessionToken");
         removeCookie(reply, "refreshToken");
       }
-      console.log(data);
+  
       return sendResponse(reply, data.statusCode, {message: data.message});
 
     } catch (error: any) {
@@ -79,21 +79,19 @@ export default function AuthRouter(app: FastifyInstance, injections: { db: DbSer
 
   app.post("/auth/logout", async (request, reply) => {
     const refreshToken: string | undefined = request.cookies.refreshToken;
-    console.log(refreshToken, "RT logout");
+  
     try {
       if(refreshToken){
         await authControl.logout(refreshToken);
       }
       removeCookie(reply, "sessionToken");
       removeCookie(reply, "refreshToken");
-      console.log("FIM LOGOUT")
       return sendResponse(reply, 200, {message: "Logged out"});
 
     } catch (error: any) {
       console.error("[Error in POST /auth/logout:]", error);
       removeCookie(reply, "sessionToken");
       removeCookie(reply, "refreshToken");
-      console.log("FIM ERRO LOGOUT")
       return sendResponse(reply, 500, { message: error.message});
     }
   })

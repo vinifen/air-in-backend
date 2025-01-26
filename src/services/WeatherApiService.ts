@@ -17,7 +17,6 @@ export default class WeatherApiService {
           const response = await axios.get(
             `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${this.apiKey}&units=metric`
           );
-          console.log(response, "TRUE REQUEST API WEATHER");
           return { city: response.data.name, content: response.data, status: true };
         } catch (error: any) {
           allValid = false;
@@ -25,7 +24,6 @@ export default class WeatherApiService {
         }
       })
     );
-    console.log(data, "API DATA RESPONSE SERVICE");
     return {data: data, allValid: allValid};
   }
 }

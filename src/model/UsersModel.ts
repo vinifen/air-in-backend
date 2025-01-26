@@ -6,12 +6,10 @@ export default class UsersModel {
   constructor(private dbService: DbService){}
 
   async selectUserById(userID: number) {
-    console.log(userID, "USERID EM SELECT USER BY ID");
     try {
       const query = "SELECT * FROM users WHERE id = ?";
       const value = [userID];
       const response = await this.dbService.getQuery(query, value);
-      console.log(response, "RESPONSE SELECT USER RID BY PUBLIC")
       if (!response || response.length === 0) {
         return null;
       }
@@ -58,10 +56,8 @@ export default class UsersModel {
   }
 
   async selectPasswordByUserID(userId: number){
-    console.log(userId, "USER ID PASSWORD");
     const query = "SELECT password FROM users WHERE id = ?";
     const response: RowDataPacket[] = await this.dbService.getQuery(query, [userId]);
-    console.log(response[0].password);
     if (response.length === 0) {
       return null;
     }
@@ -76,7 +72,6 @@ export default class UsersModel {
       }
   
       const query = "INSERT INTO users(username, password, public_id) VALUES (?,?,?)";
-      console.log(username, password, publicUserID);
   
       await this.dbService.getQuery(query, [username, password, publicUserID]);
       const result = await this.selectUserByUsername(username);
@@ -97,7 +92,6 @@ export default class UsersModel {
       if(!validator){
         return {status: false, message: "Delete user data not authorized"}
       }
-      console.log(userID, "USER ID TO DELETE");
   
       const userExists = await this.selectUserById(userID);
       if (!userExists) {
@@ -121,7 +115,6 @@ export default class UsersModel {
 
   async alterUsername(userId: number, newUsername: string) {
     try {
-      console.log(userId, newUsername, "DADOS ALTER USERNAME")
       const existingUser = await this.selectUserByUsername(newUsername);
       if (existingUser) {
         return { status: false, message: 'Username is already taken.' };
@@ -149,8 +142,6 @@ export default class UsersModel {
 
   async alterPassword(userId: number, newHashPassword: string) {
     try {
-      console.log(userId, newHashPassword, "DADOS ALTER PASSWORD")
-
       const query = "UPDATE users SET password = ? WHERE id = ?";
       await this.dbService.getQuery(query, [newHashPassword, userId]);
       return {status: true, message: "New password changed successfully"}
