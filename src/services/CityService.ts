@@ -1,5 +1,4 @@
 import CitiesModel from "../model/CitiesModel";
-import JWTSessionRefreshService from "./JWTSessionRefreshService";
 
 export default class CityService {
   constructor(private modelCities: CitiesModel){}

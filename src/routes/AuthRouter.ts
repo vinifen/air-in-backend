@@ -1,7 +1,6 @@
 import { FastifyInstance } from "fastify";
 import DbService from "../services/DbService";
 import AuthControl from "../controller/AuthControl";
-import UsersModel from "../model/UsersModel";
 import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 import { sendResponse } from "../utils/sendReponse";
 import { sendCookie } from "../utils/sendCookie";
@@ -13,7 +12,7 @@ import UserService from "../services/UserService";
 export default function AuthRouter(app: FastifyInstance, injections: { db: DbService, jwtSessionRefreshS: JWTSessionRefreshService, userService: UserService}){
   const refreshTokenModel = new RefreshTokenModel(injections.db);
   const authService = new AuthService(injections.jwtSessionRefreshS,refreshTokenModel)
-  const authControl = new AuthControl(refreshTokenModel, injections.jwtSessionRefreshS, authService, injections.userService);
+  const authControl = new AuthControl(injections.jwtSessionRefreshS, authService, injections.userService);
 
   app.post("/auth/login", async (request, reply) => {
     const {username, password, rememberMe} = request.body as {username: string, password: string, rememberMe: boolean};

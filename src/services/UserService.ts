@@ -1,7 +1,6 @@
 import { uuidv7 } from "uuidv7";
 import UsersModel from "../model/UsersModel";
 import { toHash } from "../utils/toHash";
-import AuthService from "./AuthService";
 import JWTSessionRefreshService from "./JWTSessionRefreshService";
 import { JwtPayload } from "jsonwebtoken";
 

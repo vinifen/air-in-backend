@@ -1,6 +1,5 @@
 import { JwtPayload } from "jsonwebtoken";
 import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
-import RefreshTokenModel from "../model/RefreshTokenModel";
 import AuthService from "../services/AuthService";
 import UserService from "../services/UserService";
 
@@ -8,7 +7,6 @@ import UserService from "../services/UserService";
 
 export default class AuthControl {
   constructor(
-    private refreshTokenModel: RefreshTokenModel, 
     private jwtSessionRefresh: JWTSessionRefreshService,
     private authService: AuthService,
     private userService: UserService

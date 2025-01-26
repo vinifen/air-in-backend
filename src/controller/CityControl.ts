@@ -1,9 +1,5 @@
-import CitiesModel from "../model/CitiesModel";
-import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
 import WeatherApiService from "../services/WeatherApiService";
 import IWeatherAPIResponse from "../interfaces/IWeatherAPIResponse";
-import UsersModel from "../model/UsersModel";
-import { JwtPayload } from "jsonwebtoken";
 import UserService from "../services/UserService";
 import CityService from "../services/CityService";
 
@@ -77,27 +73,4 @@ export default class CityControl {
     return {status: true, statusCode: 200, message:resultRemoveCities.message}
   }
 
-
-
-
-  
-
-
-  // async getAllWeather(){
-  //   const allCities: string[] = await this.modelCities.selectAllCities();
-    
-  //   const result = await Promise.all( allCities.map(async (cities: string) =>{
-  //     return await this.apiWeatherService.request( [cities] );
-  //   }));
-  //   return result;
-  // }
-
-  // //talvez eu nao use
-  // async getWeatherBycitiesID(id: number) {
-  //   const response: string[] = await this.modelCities.selectcitiesById(id);
-   
-  //   const result = await this.apiWeatherService.request(response);
-  //   return result;
-  // } 
-  
 }

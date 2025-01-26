@@ -1,7 +1,5 @@
-import UsersModel from "../model/UsersModel";
 import JWTSessionRefreshService from "./JWTSessionRefreshService";
 import bcrypt from "bcrypt";
-import { saltRounds } from "../utils/saltRounds";
 import { JwtPayload } from "jsonwebtoken";
 import RefreshTokenModel from "../model/RefreshTokenModel";
 import { toHash } from "../utils/toHash";
@@ -80,7 +78,6 @@ export default class AuthService{
     }
     return {status: true, statusCode: 200}
   }
-
 
   async deleteOldHashRefreshToken(userID: number, publicTokenID: string){
     console.log(userID, publicTokenID, "DELETE REFRESH TOKEN NO SERVICE");
