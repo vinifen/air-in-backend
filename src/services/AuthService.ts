@@ -33,7 +33,6 @@ export default class AuthService{
   }
 
   async validatePassword(password: string, hashPassword: string){
-    console.log(hashPassword, password, "AUTH PASSWORDddddddddddddd")
     if(!hashPassword || !password){
       return {status: false, statusCode: 400, message: "Invalid Credentials"}
     }
@@ -66,9 +65,7 @@ export default class AuthService{
 
 
   async isHashRefreshTokenValid(userID: number, publicTokenID: string){
-    console.log(userID, publicTokenID, 'user e public token id');
     const hashRefreshToken = await this.refreshTokenModel.selectHashRefreshToken(userID, publicTokenID);
-    console.log(hashRefreshToken);
     if (!hashRefreshToken || hashRefreshToken.status === false || !hashRefreshToken.token ) {
       return {
         status: false,
@@ -80,9 +77,8 @@ export default class AuthService{
   }
 
   async deleteOldHashRefreshToken(userID: number, publicTokenID: string){
-    console.log(userID, publicTokenID, "DELETE REFRESH TOKEN NO SERVICE");
     const resultDeleteOldRT = await this.refreshTokenModel.deleteRefreshToken(userID, publicTokenID);
-    console.log(resultDeleteOldRT, "resultDeleteOldRT")
+    return resultDeleteOldRT;
   }
 
   async deleteAllUserRefreshTokens(userID: number){

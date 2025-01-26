@@ -13,14 +13,12 @@ export default class UserControl {
     private cityService: CityService
   ) {}
 
-
   async getUser(sessionToken: string) {
     const resultPayload = this.jwtSessionRefreshService.getSessionTokenPayload(sessionToken);
     if(!resultPayload.status || !resultPayload.data){
       return {status: false, message: resultPayload.message}
     }
     const payload: JwtPayload = resultPayload.data;
-    console.log(payload, "PAYLOAD GETUSER")
 
     const publicUserIDValidity = await this.userService.verifyPublicUserIdData(payload.publicUserID);
     if(!publicUserIDValidity.status){
@@ -125,13 +123,12 @@ export default class UserControl {
       return {status: false, message: "Invalid token"}
     }
 
-    const resultPayload = this.jwtSessionRefreshService.getSessionTokenPayload(sessionToken)
+    const resultPayload = this.jwtSessionRefreshService.getSessionTokenPayload(sessionToken);
     if(!resultPayload.status || !resultPayload.data){
       return {status: false, message: "Error getting token data"}
     }   
     const payload: JwtPayload = resultPayload.data;
-    const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID)
-    console.log("RESULST USERDATA PUT USERNAME", resultUserData);
+    const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID);
     const resultHashPassword = await this.userService.getHashPassword(resultUserData.userID);
     if(!resultHashPassword.status){
       return {status: false, message: resultHashPassword.message}
@@ -142,12 +139,12 @@ export default class UserControl {
       return { status: isPasswordValid.status, message: isPasswordValid.message}
     }
 
-    const resultUpdateUsername = await this.userService.updateUsername(newUsername, resultUserData.userID)
+    const resultUpdateUsername = await this.userService.updateUsername(newUsername, resultUserData.userID);
     if(!resultUpdateUsername.status){
       return {status: false, message: resultUpdateUsername.message}
     }
 
-    const resultNewTokens = await this.authService.handlerTokens(resultUserData.userID, resultUserData.username, resultUserData.publicUserID)
+    const resultNewTokens = await this.authService.handlerTokens(resultUserData.userID, resultUserData.username, resultUserData.publicUserID);
     if(!resultNewTokens.status){
       return {status: false, message: resultNewTokens.message}
     }
@@ -169,13 +166,12 @@ export default class UserControl {
       return {status: false, message: "Invalid token"}
     }
 
-    const resultPayload = this.jwtSessionRefreshService.getSessionTokenPayload(sessionToken)
+    const resultPayload = this.jwtSessionRefreshService.getSessionTokenPayload(sessionToken);
     if(!resultPayload.status || !resultPayload.data){
       return {status: false, message: "Error getting token data"}
     }   
     const payload: JwtPayload = resultPayload.data;
-    const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID)
-    console.log("RESULST USERDATA PUT PASSWORD", resultUserData);
+    const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID);
     const resultHashPassword = await this.userService.getHashPassword(resultUserData.userID);
     if(!resultHashPassword.status){
       return {status: false, message: resultHashPassword.message}
@@ -186,7 +182,7 @@ export default class UserControl {
       return { status: isPasswordValid.status, message: isPasswordValid.message}
     }
 
-    const resultUpdateUsername = await this.userService.updatePassword(newPassword, resultUserData.userID)
+    const resultUpdateUsername = await this.userService.updatePassword(newPassword, resultUserData.userID);
     if(!resultUpdateUsername.status){
       return {status: false, message: resultUpdateUsername.message}
     }
@@ -196,7 +192,7 @@ export default class UserControl {
       return { status: false, message: resultDeleteRefreshTokens.message}
     }
 
-    const resultNewTokens = await this.authService.handlerTokens(resultUserData.userID, resultUserData.username, resultUserData.publicUserID)
+    const resultNewTokens = await this.authService.handlerTokens(resultUserData.userID, resultUserData.username, resultUserData.publicUserID);
     if(!resultNewTokens.status){
       return {status: false, message: resultNewTokens.message}
     }

@@ -18,7 +18,7 @@ export default class AuthControl {
       return {status: false, statusCode: 400, message: "Invalid Credentials."}
     }
 
-    const checkUsername = await this.userService.checkIfUsernameExists(usnm)
+    const checkUsername = await this.userService.checkIfUsernameExists(usnm);
     if(!checkUsername){
       return {status: false, statusCode: 400, message: "Username not found."}
     }
@@ -73,16 +73,13 @@ export default class AuthControl {
     }
     const payload: JwtPayload = getPayload.data;
     
-    const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID)
+    const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID);
     if(!resultUserData){
       return {
         statusCode: 400,
         message: "Error getting user data",
       };
     }
-
-    console.log(payload,  "REFRESH TOKEN PAYLOAD REGENERATE TOKENS");
-    console.log(resultUserData.userID, "USER ID EM RegenerateTokens");
     
     if(!this.jwtSessionRefresh.validityRefreshToken(refreshToken)){
       return {
@@ -92,7 +89,6 @@ export default class AuthControl {
     }
 
     const verifyHashRT = await this.authService.isHashRefreshTokenValid(resultUserData.userID, payload.publicTokenID);
-    console.log(verifyHashRT,  "VERIFY HASH TOKEN");
     if(verifyHashRT.status === false){
       return {
         statusCode: verifyHashRT.statusCode, 
@@ -100,7 +96,7 @@ export default class AuthControl {
       }
     }
 
-    const result = await this.authService.handlerTokens(resultUserData.userID, payload.username, payload.publicUserID)
+    const result = await this.authService.handlerTokens(resultUserData.userID, payload.username, payload.publicUserID);
     if(!result.status){
       return {statusCode: result.statusCode, message: "Error regenerate tokens"}
     }
@@ -114,13 +110,9 @@ export default class AuthControl {
   }
 
   async logout(refreshToken: string){
-    //C
-    console.log(refreshToken, "REFRESH TOKEN LOGOUT CONTROL")
     const payload = this.authService.verifyRefreshTokenPayload(refreshToken);
-    console.log(payload, "AQUI LOGOUT")
     if(payload && payload.publicUserID && payload.publicTokenID){
-      const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID)
-      console.log(resultUserData, "RESULT USER DATA LOGOUT");
+      const resultUserData = await this.userService.verifyPublicUserIdData(payload.publicUserID);
       if(!resultUserData){
         return {
           statusCode: 400,
@@ -129,8 +121,6 @@ export default class AuthControl {
       }
       const publicTokenID: string = payload.publicTokenID;
       const resultDeleteOldRT = await this.authService.deleteOldHashRefreshToken(resultUserData.userID, publicTokenID);
-      console.log(resultDeleteOldRT, "resultDeletOldRT");
-
     }
   }
 

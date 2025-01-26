@@ -69,7 +69,6 @@ export default class CityService {
 
   private mergeCitiesToUserID(cities: string[], IDuser: number) {
     const citiesWithUserID: [string, number][] = cities.map((city) => [city, IDuser]);
-    console.log(citiesWithUserID);
     return citiesWithUserID; 
   }
 }
