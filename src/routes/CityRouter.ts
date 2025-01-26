@@ -6,8 +6,6 @@ import CitiesModel from "../model/CitiesModel";
 import DbService from "../services/DbService";
 import { verifyAuth } from "../middleware/verifyAuth";
 import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
-import IWeatherAPIResponse from "../interfaces/IWeatherAPIResponse";
-import UsersModel from "../model/UsersModel";
 import UserService from "../services/UserService";
 import CityService from "../services/CityService";
 
@@ -77,20 +75,5 @@ export default function CityRouter(app: FastifyInstance, injections: {db: DbServ
       return sendResponse(reply, 500, { message: error.message || error });
     }
   });
-
-  //talvez nao use
-  // app.get("/cities-weather/:id/", {preHandler: verifyAuth(injections.jwtSessionRefreshS)}, async (request, reply) => {
-  //   const { id } = request.params as { id: number };
- 
-  //   try {
-  //     const data = await cityControl.getWeatherByCityID(id);
-  //     return sendResponse(reply, 200, data);
-  //   } catch (error: any) {
-  //     console.error("[Error in post /cities-weather/:id/", error);
-  //     return sendResponse(reply, 500, { message: error.message || error });
-  //   }
-  // });
-  
-  
   
 }

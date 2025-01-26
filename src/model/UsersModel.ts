@@ -55,7 +55,6 @@ export default class UsersModel {
       username: response[0].username,
       publicUserID: response[0].public_id
     };
-    
   }
 
   async selectPasswordByUserID(userId: number){

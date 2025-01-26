@@ -1,1 +1,0 @@
-export const saltRounds: number = 6;

@@ -1,13 +1,7 @@
 import { JwtPayload } from "jsonwebtoken";
-import UsersModel from "../model/UsersModel";
 import JWTSessionRefreshService from "../services/JWTSessionRefreshService";
-import bcrypt from "bcrypt";
-import { saltRounds } from "../utils/saltRounds";
-import { uuidv7 } from "uuidv7";
-import AuthControl from "./AuthControl";
 import AuthService from "../services/AuthService";
 import UserService from "../services/UserService";
-import CityControl from "./CityControl";
 import CityService from "../services/CityService";
 
 export default class UserControl {
