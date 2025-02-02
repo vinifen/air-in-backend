@@ -39,6 +39,10 @@ export default class UserControl {
       return {status: false, message: `Username ${username} is already registered.`}
     }
 
+    if(!(await this.authService.validateUsername(username)).status){
+      return {status: false, message: "Invalid username"}
+    }
+
     const resultNewUser = await this.userService.addNewUser(username, password);
     if(!resultNewUser.status){
       return {status: false, message: resultNewUser.message}
@@ -118,6 +122,10 @@ export default class UserControl {
 
 
   async editUsername(newUsername: string, sessionToken: string, password: string){
+
+    if(!(await this.authService.validateUsername(newUsername)).status){
+      return {status: false, message: "Invalid username"}
+    }
     
     if(!this.jwtSessionRefreshService.validitySessionToken(sessionToken)){
       return {status: false, message: "Invalid token"}

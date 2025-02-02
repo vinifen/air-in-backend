@@ -33,7 +33,6 @@ const weatherApiService = new WeatherApiService(configVariables.WEATHER_API_KEY)
 const usersModel = new UsersModel(databaseService);
 const userService = new UserService(usersModel, sessionRefreshJWTService);
 
-
 app.register(fastifyCors, configVariables.corsOptions);
 app.register(fastifyCookie);
 app.register(CityRouter, { db: databaseService, weatherApiS: weatherApiService, jwtSessionRefreshS: sessionRefreshJWTService, userService });

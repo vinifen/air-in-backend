@@ -32,7 +32,13 @@ export default class AuthService{
     }
   }
 
+
   async validatePassword(password: string, hashPassword: string){
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{4,90}$/;
+    if(!passwordRegex.test(password)){
+      return {status: false, statusCode: 400, message: "Invalid Credentials"}
+    }
+
     if(!hashPassword || !password){
       return {status: false, statusCode: 400, message: "Invalid Credentials"}
     }
@@ -42,6 +48,15 @@ export default class AuthService{
       return {status: false, statusCode: 400, message: "Invalid Credentials"}
     }
     return {status: true, statusCode: 200, message: "Password valid"}
+  }
+
+
+  async validateUsername(username: string){
+    const usernameRegex = /^[A-Za-z0-9]{2,30}$/;
+    if(!usernameRegex.test(username)){
+      return {status: false, statusCode: 400, message: "Invalid username"}
+    }
+    return {status: true, statusCode: 200, message: "Username valid"}
   }
 
 
