@@ -12,15 +12,18 @@ export default function checkDotEnv(){
   
       SERVER_HOSTNAME=localhost
       SERVER_PORT=1111
-      DB_HOST=localhost
+
+      DB_HOST=127.0.0.1
       DB_USER=root
       DB_PASSWORD=abc321
       DB_NAME=air_in_db
+
       CORS_ORIGIN=http://localhost:4200
+
       WEATHER_API_KEY=apikey
 
-      JWT_SESSION_KEY=jwtsessiontokenkey**
-      JWT_REFRESH_KEY=jwtrefreshtokenkey**
+      JWT_SESSION_KEY=jwtsessiontokenkey
+      JWT_REFRESH_KEY=jwtrefreshtokenkey
       
       Without the .env file, the application will use default 
       values, which may cause unexpected behavior and errors.

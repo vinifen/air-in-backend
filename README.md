@@ -3,14 +3,21 @@
 ### 1. Adicionar o arquivo `.env` na raiz do projeto com a seguinte estrutura (os valores das variáveis são somente exemplos):
 
 ```env
-SERVER_HOSTNAME="localhost"
+SERVER_HOSTNAME=localhost
 SERVER_PORT=1111
 
-DB_HOST="localhost"
-DB_USER="root"
-DB_PASSWORD="abc321"
-DB_NAME="air_in_db"
-CORS_ORIGIN="http://localhost:3000"
+DB_HOST=127.0.0.1
+DB_USER=root
+DB_PASSWORD=abc321
+DB_NAME=air_in_db
+
+CORS_ORIGIN=http://localhost:4200
+
+WEATHER_API_KEY=apikey
+
+JWT_SESSION_KEY=jwtsessiontokenkey
+JWT_REFRESH_KEY=jwtrefreshtokenkey
+ 
 ```
 
 #### Nota: A aplicação funcionará sem o arquivo .env, mas usará valores padrão, o que pode resultar em erros ou comportamentos inesperados.
