@@ -6,7 +6,7 @@ class ConfigVariablesClass {
 
   get corsOptions() {
     return {
-      origin: process.env.CORS_ORIGIN,
+      origin: this.CORS_ORIGIN,
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
       credentials: true, 
     };
@@ -45,7 +45,11 @@ class ConfigVariablesClass {
   }
 
   get JWT_REFRESH_KEY(): string {
-    return process.env.JWT_SESSION_KEY || 'jwtkeyrefresh123';
+    return process.env.JWT_REFRESH_KEY || 'jwtkeyrefresh123';
+  }
+
+  get CORS_ORIGIN(): string {
+    return process.env.CORS_ORIGIN || 'http://localhost:4200';
   }
 }
 
