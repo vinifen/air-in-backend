@@ -6,7 +6,6 @@ export const removeCookie = (
   cookieName: string,
   path: string = '/',
   secure: boolean = false,
-  domain: string = configVariables.SERVER_HOSTNAME,
   sameSite: 'strict' | 'lax' | 'none' = 'lax'
 ): void => {
   if (!cookieName || !reply) {
@@ -16,8 +15,7 @@ export const removeCookie = (
   reply.clearCookie(cookieName, {
     httpOnly: true,    
     path,              
-    secure,   
-    domain,          
+    secure,           
     sameSite,          
     expires: new Date(0),
   });
