@@ -1,5 +1,4 @@
 import { FastifyReply } from 'fastify';
-import { configVariables } from './configVariables';
 
 export const sendCookie = (
   reply: FastifyReply,
@@ -8,7 +7,6 @@ export const sendCookie = (
   maxAge: number = 3600,
   httpOnly: boolean = true,
   path: string = '/',
-  domain: string = configVariables.SERVER_HOSTNAME,
   secure: boolean = false,
   sameSite: 'strict' | 'lax' | 'none' = 'lax'
 ): void => {
@@ -19,7 +17,6 @@ export const sendCookie = (
   reply.setCookie(cookieName, data, {
     httpOnly,
     path,
-    domain,
     maxAge,
     secure,
     sameSite
