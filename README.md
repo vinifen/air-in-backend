@@ -26,7 +26,7 @@ Primeiramente é necessário criar uma chave API em: https://openweathermap.org/
 ### Clonar repositório:
 
 ```bash
-  git clone https://github.com/vinifen/air-in-backend.git
+git clone https://github.com/vinifen/air-in-backend.git
 ```
 
 ### Criar banco de dados
@@ -65,13 +65,13 @@ JWT_REFRESH_KEY=A32f23f3fASFawawgnSsdfahA22rawasaAA2131akDS4f
 ### Instalar dependências:
 
 ```bash
-  npm install
+npm install
 ```
 
 ### Rodar aplicação em modo de desenvolvimento:
 
 ```bash
-  npm run dev
+npm run dev
 ```
 
 ### Fazer Build:
@@ -79,7 +79,7 @@ JWT_REFRESH_KEY=A32f23f3fASFawawgnSsdfahA22rawasaAA2131akDS4f
 Caso deseje fazer build do projeto utilize o comando abaixo:
 
 ```bash
-  npm run build
+npm run build
 ```
 
 ### Iniciar aplicação:
@@ -87,7 +87,7 @@ Caso deseje fazer build do projeto utilize o comando abaixo:
 Após o build, inicie a aplicação com o comando:
 
 ```bash
-  npm run start
+npm run start
 ```
 
 
