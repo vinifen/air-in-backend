@@ -1,8 +1,51 @@
-## Air In
+# Air-in Backend
+#### v-1.0
 
-### 1. Adicionar o arquivo `.env` na raiz do projeto com a seguinte estrutura (os valores das variáveis são somente exemplos):
+Air-in é um aplicativo desenvolvido por Vinicius FN, para pesquisa do clima em qualquer cidade do mundo. Foi criado com o objetivo de aprimorar habilidades no desenvolvimento de software web.
 
-```env
+Esse repositório é um dos três criados para o desenvolvimento do projeto, sendo os outros dois:
+- frontend: https://github.com/vinifen/air-in
+- docker: https://github.com/vinifen/air-in-docker
+
+
+## Instalação:
+
+Para uma instalação completa e simplificada, recomenda-se utilizar a versão Docker e seguir as instruções do repositório correspondente.
+
+
+Certifique-se de ter os seguintes itens instalados: 
+- git:  `sudo apt install git-all`
+- mysql-server: `sudo apt install mysql-server`
+- node.js: `sudo apt install nodejs` 
+- npm: `sudo apt install npm` 
+
+### Criar chave API 
+Primeiramente é necessário criar uma chave API em: https://openweathermap.org/api
+
+
+### Clonar repositório:
+
+```bash
+  git clone https://github.com/vinifen/air-in-backend.git
+```
+
+### Criar banco de dados
+
+Ao clonar o repositório, existirá dentro de db o arquivo air-in-db.sql
+Você pode manualmente colar o código para dentro do mysql-server ou usar o comando abaixo, editando o caminho do arquivo.
+
+```bash
+mysql < /caminho/para/air-in-db.sql
+```
+
+
+### Criar .env
+
+Criar na raíz do projeto o arquivo `.env` para a configuração geral.
+Siga o modelo abaixo e altere WEATHER_API_KEY para sua chave gerada.
+(As configurações padrões funcionam com o banco de dados)
+
+```.env
 SERVER_HOSTNAME=localhost
 SERVER_PORT=1111
 
@@ -13,43 +56,39 @@ DB_NAME=air_in_db
 
 CORS_ORIGIN=http://localhost:4200
 
-WEATHER_API_KEY=apikey
+WEATHER_API_KEY=yourkeyhere
 
-JWT_SESSION_KEY=jwtsessiontokenkey
-JWT_REFRESH_KEY=jwtrefreshtokenkey
- 
+JWT_SESSION_KEY=asdfawHDadsASDfarvaedf32A2aefawffawfavadfaadf
+JWT_REFRESH_KEY=A32f23f3fASFawawgnSsdfahA22rawasaAA2131akDS4f 
 ```
 
-#### Nota: A aplicação funcionará sem o arquivo .env, mas usará valores padrão, o que pode resultar em erros ou comportamentos inesperados.
-
-### 2. Instalar o TypeScript
-```bash
-npm install typescript 
-```
-### 3. Baixar as dependências do projeto
-```bash
-npm install
-```
-### 4. Baixar ts-node para rodar a aplicação
-```bash
-npm install ts-node 
-```
-### 5. Baixar ts-node-dev para rodar a aplicação em modo de desenvolvimento
-O ts-node-dev permite que a aplicação seja atualizada automaticamente sempre que houver alterações no código, sem precisar reiniciar o servidor manualmente.
+### Instalar dependências:
 
 ```bash
-npm install ts-node-dev --save-dev
+  npm install
 ```
-### 6. Rodar a aplicação no modo de desenvolvimento
-Para rodar a aplicação no modo de desenvolvimento (onde as alterações no código serão aplicadas automaticamente), execute:
+
+### Rodar aplicação em modo de desenvolvimento:
 
 ```bash
-npm run dev
+  npm run dev
 ```
-Isso utilizará o script definido no package.json para iniciar o servidor e monitorar as mudanças no código.
 
-### 7. Rodar a aplicação diretamente com ts-node
-Caso queira rodar a aplicação sem a funcionalidade de recarregamento automático, utilize o ts-node diretamente:
+### Fazer Build:
+
+Caso deseje fazer build do projeto utilize o comando abaixo:
+
 ```bash
-ts-node src/app.ts
+  npm run build
 ```
+
+### Iniciar aplicação:
+
+Após o build, inicie a aplicação com o comando:
+
+```bash
+  npm run start
+```
+
+
+
