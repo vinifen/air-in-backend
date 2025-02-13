@@ -1,5 +1,5 @@
 # Air-in Backend
-#### v-1.0
+#### v-1.1
 
 Air-in é um aplicativo desenvolvido por Vinicius FN, para pesquisa do clima em qualquer cidade do mundo. Foi criado com o objetivo de aprimorar habilidades no desenvolvimento de software web.
 
