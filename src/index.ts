@@ -14,8 +14,9 @@ import UserService from './services/UserService';
 import checkDotEnv from './utils/checkDotEnv';
 
 checkDotEnv();
-
 const app = fastify();
+
+console.log(configVariables.COOKIE_SECURE, configVariables.CORS_ORIGIN, configVariables.DB_HOST, configVariables.DB_NAME, configVariables.DB_PASSWORD, configVariables.DB_USER, configVariables.JWT_REFRESH_KEY, configVariables.JWT_SESSION_KEY, configVariables.SERVER_HOSTNAME, configVariables.SERVER_PORT, configVariables.WEATHER_API_KEY, configVariables.corsOptions);
 
 const databaseService = new DbService(
   configVariables.DB_HOST,
@@ -39,6 +40,9 @@ app.register(CityRouter, { db: databaseService, weatherApiS: weatherApiService, 
 app.register(UserRouter, { db: databaseService, jwtSessionRefreshS: sessionRefreshJWTService, userService });
 app.register(AuthRouter, { db: databaseService, jwtSessionRefreshS: sessionRefreshJWTService, userService })
 
-app.listen({ port: configVariables.SERVER_PORT, host: configVariables.SERVER_HOSTNAME }).then(() => {
+app.listen({ 
+  port: configVariables.SERVER_PORT, 
+  host: '0.0.0.0'
+}).then(() => {
   console.log(`HTTP server running on port: ${configVariables.SERVER_PORT}`);
 });

@@ -53,7 +53,7 @@ export default class UserService{
     const newPublicUserID = uuidv7();
     const insertResponse = await this.modelUser.insertUser(username, hashPassword, newPublicUserID);
     if(insertResponse.status == false){
-      return {status: insertResponse.status, message: "Register failed"};
+      return {status: insertResponse.status, message: insertResponse.message};
     }
     return {status: true}
   }

@@ -34,9 +34,9 @@ export default class AuthService{
 
 
   async validatePassword(password: string, hashPassword: string){
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{4,90}$/;
+    const passwordRegex = /^(?!\s)(?!.*\s$)(?=(.*[A-Za-z\d]){6,})[A-Za-z\d@_.!?\-/]{4,90}$/;
     if(!passwordRegex.test(password)){
-      return {status: false, statusCode: 400, message: "Invalid Credentials"}
+      return {status: false, statusCode: 400, message: "Password: 4-90 chars, min 6 letters, only A-Z, 0-9, @ _ - . ! ? /. No spaces at start/end."}
     }
 
     if(!hashPassword || !password){
@@ -52,9 +52,9 @@ export default class AuthService{
 
 
   async validateUsername(username: string){
-    const usernameRegex = /^[A-Za-z0-9]{2,30}$/;
+    const usernameRegex = /^[A-Za-z0-9\s]{2,30}$/;
     if(!usernameRegex.test(username)){
-      return {status: false, statusCode: 400, message: "Invalid username"}
+      return {status: false, statusCode: 400, message: "Username: 2-30 chars, only A-Z, 0-9."}
     }
     return {status: true, statusCode: 200, message: "Username valid"}
   }
