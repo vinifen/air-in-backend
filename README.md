@@ -7,7 +7,6 @@ Esse repositório é um dos três criados para o desenvolvimento do projeto, sen
 - frontend: https://github.com/vinifen/air-in
 - docker: https://github.com/vinifen/air-in-docker
 
-
 ## Instalação:
 
 Para uma instalação completa e simplificada, recomenda-se utilizar a versão Docker e seguir as instruções do repositório correspondente.
@@ -58,8 +57,10 @@ CORS_ORIGIN=http://localhost:4200
 
 WEATHER_API_KEY=yourkeyhere
 
-JWT_SESSION_KEY=asdfawHDadsASDfarvaedf32A2aefawffawfavadfaadf
-JWT_REFRESH_KEY=A32f23f3fASFawawgnSsdfahA22rawasaAA2131akDS4f 
+JWT_SESSION_KEY=yourjwtsessionkey
+JWT_REFRESH_KEY=yourjwtrefreshkey 
+ 
+COOKIE_SECURE=0
 ```
 
 ### Instalar dependências:

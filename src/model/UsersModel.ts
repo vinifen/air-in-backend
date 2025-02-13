@@ -72,12 +72,11 @@ export default class UsersModel {
       }
   
       const query = "INSERT INTO users(username, password, public_id) VALUES (?,?,?)";
-  
-      await this.dbService.getQuery(query, [username, password, publicUserID]);
-      const result = await this.selectUserByUsername(username);
-      
-      if(result === false || result.username != username){
-        return { status: false, message: 'Error inserting user into database.' };
+      const hasUsername = await this.selectUserByUsername(username);
+      if(hasUsername === false){ 
+        await this.dbService.getQuery(query, [username, password, publicUserID]);
+      }else {
+        return { status: false, message: 'Username has already been added.' };
       }
       
       return { username: username };

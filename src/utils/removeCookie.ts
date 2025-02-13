@@ -5,7 +5,7 @@ export const removeCookie = (
   reply: FastifyReply,
   cookieName: string,
   path: string = '/',
-  secure: boolean = false,
+  secure: boolean = configVariables.COOKIE_SECURE,
   sameSite: 'strict' | 'lax' | 'none' = 'lax'
 ): void => {
   if (!cookieName || !reply) {
