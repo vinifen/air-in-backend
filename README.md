@@ -1,48 +1,47 @@
 # Air-in Backend
 #### v-1.1
 
-Air-in é um aplicativo desenvolvido por Vinicius FN, para pesquisa do clima em qualquer cidade do mundo. Foi criado com o objetivo de aprimorar habilidades no desenvolvimento de software web.
+Air-in is an application developed by Vinicius FN for weather research in any city worldwide. It was created to improve skills in web software development.
 
-Esse repositório é um dos três criados para o desenvolvimento do projeto, sendo os outros dois:
-- frontend: https://github.com/vinifen/air-in
-- docker: https://github.com/vinifen/air-in-docker
+This repository is one of three created for the project's development, with the other two being:
+- frontend: https://github.com/vinifen/air-in-frontend
+- docker: https://github.com/vinifen/air-in
 
-## Instalação:
+## Installation:
 
-Para uma instalação completa e simplificada, recomenda-se utilizar a versão Docker e seguir as instruções do repositório correspondente.
+For a complete and simplified installation, it is recommended to use the Docker version and follow the instructions in the corresponding repository.
 
-
-Certifique-se de ter os seguintes itens instalados: 
+Make sure you have the following installed:
 - git:  `sudo apt install git-all`
 - mysql-server: `sudo apt install mysql-server`
 - node.js: `sudo apt install nodejs` 
 - npm: `sudo apt install npm` 
 
-### Criar chave API 
-Primeiramente é necessário criar uma chave API em: https://openweathermap.org/api
+### Create API Key
+First, you need to create an API key at: https://openweathermap.org/api
 
 
-### Clonar repositório:
+### Clone the repository:
 
 ```bash
 git clone https://github.com/vinifen/air-in-backend.git
 ```
 
-### Criar banco de dados
+### Create the database:
 
-Ao clonar o repositório, existirá dentro de db o arquivo air-in-db.sql
-Você pode manualmente colar o código para dentro do mysql-server ou usar o comando abaixo, editando o caminho do arquivo.
+After cloning the repository, you will find the air-in-db.sql file inside the db folder.
+You can manually copy and paste the code into MySQL Server or use the command below, editing the file path accordingly:
 
 ```bash
 mysql < /caminho/para/air-in-db.sql
 ```
 
 
-### Criar .env
+### Create .env
 
-Criar na raíz do projeto o arquivo `.env` para a configuração geral.
-Siga o modelo abaixo e altere WEATHER_API_KEY para sua chave gerada.
-(As configurações padrões funcionam com o banco de dados)
+Create a `.env` file in the project's root directory for general configuration.
+Follow the template below and replace WEATHER_API_KEY with your generated key.
+(The default settings work with the database)
 
 ```.env
 SERVER_HOSTNAME=localhost
@@ -63,29 +62,29 @@ JWT_REFRESH_KEY=yourjwtrefreshkey
 COOKIE_SECURE=0
 ```
 
-### Instalar dependências:
+### Install dependencies:
 
 ```bash
 npm install
 ```
 
-### Rodar aplicação em modo de desenvolvimento:
+### Run the application in development mode:
 
 ```bash
 npm run dev
 ```
 
-### Fazer Build:
+### Build the project:
 
-Caso deseje fazer build do projeto utilize o comando abaixo:
+If you want to build the project, use the command below:
 
 ```bash
 npm run build
 ```
 
-### Iniciar aplicação:
+### Start the application:
 
-Após o build, inicie a aplicação com o comando:
+After building, start the application with the command:
 
 ```bash
 npm run start
